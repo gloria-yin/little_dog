@@ -774,6 +774,37 @@
 <script>
 /**
  * =========================================================
+ * 动态注入 Web App Manifest 核心 (PWA 安装支持)
+ * =========================================================
+ */
+(function setupManifest() {
+    const iconUrl = "https://cn.atoilgas.com/uploads/20260320/653a2c0beb83198b9a07ce16017d00d2.jpg";
+    const manifest = {
+        name: "LittleDog",
+        short_name: "LittleDog",
+        start_url: window.location.href.split('?')[0] || ".",
+        display: "standalone",
+        background_color: "#f4ecdf",
+        theme_color: "#FDFBEF",
+        icons: [
+            { src: iconUrl, sizes: "192x192", type: "image/jpeg", purpose: "any maskable" },
+            { src: iconUrl, sizes: "512x512", type: "image/jpeg", purpose: "any maskable" }
+        ]
+    };
+
+    // 将 JSON 转换为 Data URI 并注入页面
+    const manifestString = JSON.stringify(manifest);
+    const blob = new Blob([manifestString], {type: 'application/manifest+json'});
+    const manifestUrl = URL.createObjectURL(blob);
+    
+    const link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = manifestUrl;
+    document.head.appendChild(link);
+})();
+
+/**
+ * =========================================================
  * 纯文本数据源 (Txt Data Source) - Style
  * =========================================================
  */
@@ -4093,6 +4124,7 @@ COT特点词： 角色性欲预测、性爱阶段判断、避孕戴套、Dirtyta
 冲突离开： 表现角色在冲突中产生性欲后的挣扎与克制处理，而非粗暴的强行发生，体现自尊与底线。
 撒娇亲近： 确定性爱当前阶段，设计微距递进式细节嵌套，结合情感经历生成高质量 Dirtytalk，最后以开放动作收尾。
 `;
+
 
 /**
  * =========================================================
