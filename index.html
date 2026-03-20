@@ -1,0 +1,4622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>小狗预设使用手册</title>
+    <style>
+        /* === CSS Variables & Theming === */
+        :root {
+            /* Vintage Color Palette */
+            --bg-page: #f4ecdf; /* Aged paper base */
+            --bg-card: #fdfbf7; /* Slightly brighter for cards */
+            --bg-example: #f0e6d2; /* Darker paper for code/example blocks */
+            --bg-highlight: #e8dcc4; /* Highlight block for CoT */
+            --text-main: #2b2620; /* Faded black/dark brown */
+            --text-muted: #6b5e50; /* Brownish gray for secondary text */
+            --accent-primary: #8c5a35; /* Vintage sepia/rust */
+            --accent-secondary: #5c7a6b; /* Muted vintage green */
+            --accent-red: #a33b3b; /* Vintage red for NSFW heart/quotes */
+            --border-color: #d8cdba;
+            
+            /* Typography */
+            --font-serif: 'Noto Serif SC', 'Songti SC', 'STSong', 'Times New Roman', serif;
+            --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            
+            /* Layout & Effects */
+            --nav-height: 60px;
+            --shadow-soft: 0 4px 12px rgba(43, 38, 32, 0.06);
+            --shadow-inset: inset 0 0 40px rgba(140, 90, 53, 0.03);
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* === Reset & Base === */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            color: var(--text-main);
+            /* Vintage paper gradient background */
+            background-color: var(--bg-page);
+            background-image: 
+                radial-gradient(circle at center, transparent 0%, rgba(140, 90, 53, 0.05) 100%),
+                linear-gradient(0deg, rgba(0,0,0,0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 4px;
+            line-height: 1.6;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* === Typography === */
+        h1, h2, h3, .font-serif {
+            font-family: var(--font-serif);
+            font-weight: 700;
+        }
+
+        /* === Top Navigation === */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(253, 251, 247, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header-top {
+            display: flex;
+            height: var(--nav-height);
+            width: 100%;
+        }
+
+        .nav-tabs {
+            flex: 1;
+            display: flex;
+            position: relative;
+        }
+
+        .nav-tab {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: var(--font-serif);
+            letter-spacing: 1px;
+        }
+
+        .nav-tab.active {
+            color: var(--accent-primary);
+        }
+
+        .nav-indicator {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            width: 50%;
+            background-color: var(--accent-primary);
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .filter-toggle {
+            width: 70px;
+            background: none;
+            border: none;
+            border-left: 1px dashed var(--border-color);
+            cursor: pointer;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .filter-toggle:hover {
+            color: var(--accent-primary);
+        }
+
+        .chevron-icon {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        body.filter-collapsed .chevron-icon {
+            transform: rotate(180deg);
+        }
+
+        /* === Filter Bar === */
+        .filter-bar {
+            padding: 12px 16px;
+            background: var(--bg-page);
+            border-bottom: 1px dashed var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 500px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            opacity: 1;
+        }
+
+        body.filter-collapsed .filter-bar {
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            opacity: 0;
+            border-bottom-width: 0;
+            margin: 0;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        select, input[type="text"] {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-main);
+            border-radius: var(--radius-md);
+            font-family: var(--font-sans);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        select:focus, input[type="text"]:focus {
+            border-color: var(--accent-primary);
+        }
+
+        select {
+            flex: 0 0 auto;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tag-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .filter-tag {
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .filter-tag.active {
+            background: var(--accent-primary);
+            color: #fff;
+            border-color: var(--accent-primary);
+            box-shadow: 0 2px 4px rgba(140, 90, 53, 0.3);
+        }
+
+        /* === Sidebar & Overlay === */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            z-index: 101;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+        .sidebar-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100%;
+            background: var(--bg-card);
+            z-index: 102;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .sidebar.open {
+            transform: translateX(280px);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            font-family: var(--font-serif);
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-bottom: 1px dashed var(--border-color);
+            color: var(--accent-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-sidebar {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .toc-list {
+            list-style: none;
+            padding: 10px 0;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .toc-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toc-item:hover, .toc-item:active {
+            background: var(--bg-page);
+            border-left-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        .toc-id {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+
+        /* Floating Button */
+        .floating-toc-btn {
+            position: fixed;
+            left: 0;
+            top: 60%;
+            transform: translateY(-50%);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-left: none;
+            padding: 12px 10px 12px 8px;
+            border-radius: 0 8px 8px 0;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.05);
+            z-index: 90;
+            cursor: pointer;
+            color: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* === Main Content Area === */
+        main {
+            padding-top: calc(var(--nav-height) + 120px); 
+            padding-bottom: 40px;
+            padding-left: 16px;
+            padding-right: 16px;
+            min-height: 100vh;
+            max-width: 800px;
+            margin: 0 auto;
+            transition: padding-top 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        body.filter-collapsed main {
+            padding-top: calc(var(--nav-height) + 20px);
+        }
+
+        .view-section {
+            display: none;
+        }
+
+        .view-section.active {
+            display: block;
+            animation: slideFadeIn 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+            font-family: var(--font-serif);
+            font-style: italic;
+            border: 1px dashed var(--border-color);
+            border-radius: var(--radius-lg);
+            background: var(--bg-card);
+        }
+
+        /* === Cards Shared === */
+        .cards-container {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid #e8decb;
+            box-shadow: var(--shadow-soft), var(--shadow-inset);
+            padding: 24px 20px;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUp 0.5s ease forwards;
+        }
+
+        /* Vintage corner accents */
+        .card::before, .card::after {
+            content: '';
+            position: absolute;
+            width: 20px; height: 20px;
+            border: 1px solid var(--border-color);
+            opacity: 0.5;
+        }
+        .card::before { top: 8px; left: 8px; border-right: none; border-bottom: none; }
+        .card::after { bottom: 8px; right: 8px; border-left: none; border-top: none; }
+
+        .card-header {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-id {
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+        }
+
+        .card-title-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            color: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .icon-quill, .icon-brain {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+            opacity: 0.8;
+        }
+
+        .icon-heart {
+            color: var(--accent-red);
+            font-size: 1.2rem;
+            animation: pulse 2s infinite;
+        }
+
+        .card-tags {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .tag-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tag-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-right: 4px;
+            font-family: var(--font-serif);
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: var(--bg-example);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        .tag.preset { background: #e6dfd1; border-color: #d1c6b1; }
+        .tag.direction { background: #dce1d8; border-color: #c4ccbe; color: var(--accent-secondary); }
+        .tag.keyword { background: #e8d8d8; border-color: #d8c4c4; color: var(--accent-red); }
+
+        /* Length Tags specialized colors */
+        .tag.length-short { background: #e2e8e0; border-color: #cdd8c8; color: #4a6645; }
+        .tag.length-mid { background: #ebe2d3; border-color: #dfcdb6; color: #876841; }
+        .tag.length-long { background: #ebd5d5; border-color: #dfbaba; color: #8a4545; }
+
+        .card-section {
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-family: var(--font-serif);
+        }
+
+        .reference-text {
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        .features-list {
+            padding-left: 20px;
+            font-size: 0.95rem;
+        }
+
+        .features-list li {
+            margin-bottom: 6px;
+            position: relative;
+            list-style-type: none;
+        }
+
+        .features-list li::before {
+            content: '•';
+            position: absolute;
+            left: -15px;
+            color: var(--accent-primary);
+        }
+
+        .example-block {
+            background: var(--bg-example);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            font-size: 0.95rem;
+            border-left: 3px solid var(--accent-primary);
+            color: #3a3229;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);
+            position: relative;
+        }
+
+        .example-block p {
+            text-indent: 2em; /* 段前空2格 */
+            line-height: 1.2; /* 单倍行距 */
+            margin-top: 0;
+            margin-bottom: 0.5em; /* 段落间距0.5行 */
+        }
+
+        .example-block p:last-child {
+            margin-bottom: 0;
+        }
+        
+        /* Stylized quotes */
+        .quote-style {
+            font-style: italic;
+            color: var(--accent-red);
+            font-family: var(--font-serif);
+            background: rgba(163, 59, 59, 0.05);
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        /* === CoT Specific Styles === */
+        .cot-highlight {
+            background: var(--bg-highlight);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            margin-bottom: 16px;
+            box-shadow: inset 0 2px 8px rgba(140, 90, 53, 0.08);
+            border: 1px solid #d8cdba;
+            position: relative;
+            overflow: hidden;
+        }
+        .cot-highlight::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 4px; height: 100%;
+            background: var(--accent-primary);
+            opacity: 0.8;
+        }
+        .highlight-item {
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .highlight-item:last-child {
+            margin-bottom: 0;
+        }
+        .highlight-title {
+            color: var(--accent-primary);
+            font-weight: bold;
+            font-family: var(--font-serif);
+            margin-right: 4px;
+        }
+
+        .vintage-list {
+            padding-left: 0;
+            counter-reset: custom-counter;
+        }
+        .vintage-list li {
+            position: relative;
+            list-style: none;
+            padding-left: 28px;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+        .vintage-list li::before {
+            counter-increment: custom-counter;
+            content: counter(custom-counter) ".";
+            position: absolute;
+            left: 0;
+            color: var(--accent-primary);
+            font-weight: bold;
+            font-family: var(--font-serif);
+        }
+
+        .scene-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .scene-box {
+            background: rgba(240, 230, 210, 0.5);
+            border: 1px dashed var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            position: relative;
+        }
+        .scene-box-title {
+            font-family: var(--font-serif);
+            color: var(--accent-secondary);
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .scene-box-title::before {
+            content: '✤';
+            font-size: 0.8rem;
+            color: var(--accent-secondary);
+        }
+        .scene-box p {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #3a3229;
+            margin: 0;
+            text-align: justify;
+        }
+
+        @media (min-width: 768px) {
+            .scene-container {
+                flex-direction: row;
+            }
+            .scene-box {
+                flex: 1;
+            }
+        }
+
+        /* === Animations === */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideFadeIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Responsive adjustments */
+        @media (min-width: 768px) {
+            .filter-bar {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .search-row {
+                flex: 0 0 300px;
+            }
+            .tag-row {
+                flex: 1;
+                justify-content: flex-end;
+            }
+            main {
+                padding-top: calc(var(--nav-height) + 80px);
+            }
+            body.filter-collapsed main {
+                padding-top: calc(var(--nav-height) + 20px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <!-- Header & Navigation -->
+    <header id="main-header">
+        <div class="header-top">
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-target="style">文风</button>
+                <button class="nav-tab" data-target="cot">思维链</button>
+                <div class="nav-indicator" id="nav-indicator"></div>
+            </div>
+            
+            <button class="filter-toggle" id="btn-toggle-filter" title="展开/收起筛选">
+                <span style="font-size: 0.85rem; margin-right: 2px;">筛选</span>
+                <svg class="chevron-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Global Filter Bar -->
+        <div class="filter-bar" id="filter-bar">
+            <div class="search-row">
+                <select id="search-type">
+                    <option value="title">标题搜索</option>
+                    <option value="feature">特点搜索</option>
+                </select>
+                <input type="text" id="search-input" placeholder="输入关键词...">
+            </div>
+            <div class="tag-row" id="filter-tags">
+                <!-- Tags generated by JS -->
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Toggle Button -->
+    <div class="floating-toc-btn" id="btn-toggle-sidebar">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="8" y1="6" x2="21" y2="6"></line>
+            <line x1="8" y1="12" x2="21" y2="12"></line>
+            <line x1="8" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+        </svg>
+    </div>
+
+    <!-- Sidebar TOC -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span id="toc-header-title">🔖 目录</span>
+            <button class="close-sidebar" id="btn-close-sidebar">&times;</button>
+        </div>
+        <ul class="toc-list" id="toc-list">
+            <!-- TOC items generated by JS -->
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main>
+        <!-- View: 文风 (Style List) -->
+        <div class="view-section active" id="view-style">
+            <div class="cards-container" id="cards-container-style"></div>
+        </div>
+
+        <!-- View: 思维链 (Chain of Thought) -->
+        <div class="view-section" id="view-cot">
+            <div class="cards-container" id="cards-container-cot"></div>
+        </div>
+
+        <!-- Global Empty State -->
+        <div id="no-result" class="empty-state" style="display: none;">
+            未找到匹配的内容，请尝试调整筛选条件。
+        </div>
+    </main>
+</div>
+
+<script>
+/**
+ * =========================================================
+ * 纯文本数据源 (Txt Data Source) - Style
+ * =========================================================
+ */
+const rawStyleData = `
+0000：轻盈日常
+文风名称： 轻盈日常
+NSFW： 否
+文风对应预设： 留光、小狗
+文风使用方向： 都市纯爱、治愈系、美食文、生活流耽美、清新小甜饼
+文风参考： 汪曾祺、林文月、M.F.K. Fisher
+文风特点词： 诗意、精确、轻盈、温润
+文风特点介绍：
+通过精确的观察而非模糊的抒情来产生诗意。
+关注日常动作的自然优雅（如切水果、浇水）。
+句子长而流动，营造出宽敞、闲适的节奏感。
+浪漫体现在具体的、务实的关心与时机中。
+拒绝隐喻，美感源于对事物原貌的排列与白描。
+文风示例：
+午后的阳光正以一种精确的角度斜切过咖啡馆的橡木桌，空气里浮动着烘焙豆子的微酸香气。他坐在靠窗的位置，正低头剥一只略显干瘪的橘子，手指缓慢而专注，像是在处理一件精密的仪器。
+她推门进来时，风铃发出一声短促的脆响。他抬起头，视线越过几点飞舞的尘埃，落在她那件洗得发软的亚麻衬衫上。
+他没有流露出惊愕，只是极其自然地掰下一瓣橘络分明的橘肉，放在白瓷碟里推向对面，轻声说：“这季的砂糖橘有些过季了，但还算甜，你尝尝。”
+---
+0001：市井白描
+文风名称： 市井白描
+NSFW： 否
+文风对应预设： 留光、小狗
+文风使用方向： 乡土文学、年代文、美食随笔、怀旧题材、家族往事
+文风参考： 汪曾祺、沈从文、阿城
+文风特点词： 烟火气、素雅、平淡、生活感
+文风特点介绍：
+聚焦平凡生活的质感，拒绝夸张的戏剧冲突。
+崇尚“淡”，情绪通过动作而非形容词表达。
+强调饮食与时令，将食物作为关怀的语言。
+句子短促且有节奏，语气冷静、超然且带有慈悲。
+场景常结束于一组宁静的自然景观，余韵悠长。
+文风示例：
+雨停了。长街上的石板路湿漉漉的，泛着青光。
+他在菜摊前挑拣着一把带露水的旱藕，手指粗糙，指缝里还带着些泥。她撑着一把旧油纸伞从巷子深处走出来，脚上的黑布鞋边沾了一圈泥点子。两人在窄路中央撞了面，谁也没躲。
+他站定身子，把那捆藕往怀里揣了揣，抬头看了看天色。
+她说：“这藕清炒最好，塞肉就可惜了。”
+他点点头，应了一句，“是，清炒脆口。”
+说完，他侧身让出半个肩膀，她收了伞，低头走了过去。槐树上的知了叫了一嗓子，天又亮了些。
+---
+0002：纯净白描
+文风名称： 纯净白描
+NSFW： 否
+文风对应预设： 留光、众生相、小狗
+文风使用方向： 极简主义小说、严肃文学、冷静疏离向叙事、短篇精悍类
+文风参考： 阿城、孙犁、海明威
+文风特点词： 极简、名词统治、零比喻、硬朗
+文风特点介绍：
+坚决排斥形容词和副词，信任名词与动词的力量。
+严格的“零比喻”原则，拒绝一切“像”、“仿佛”。
+回避心理描写，通过物理反应展示内在情绪。
+关注生活的过程细节（如洗笔、叠衣服），追求物理质感。
+留白艺术，在冲突达到顶点前截断，让读者自行补全。
+文风示例：
+他坐在站台的长椅上。面前放一只黑皮箱，皮面磨损严重。她走过来，站在三步远的地方。她穿着一件蓝色的布大衣，扣子扣到最上面一颗。他站起来，拍掉裤腿上的灰。
+她看着他。
+他从兜里摸出一包烟，火机擦了三次才着，火苗是红色的。烟雾散开。
+她说，“火车晚点了。”
+他说，“晚了半个时辰。”
+她低头看地上的砖缝。那里长着一棵枯黄的草。
+他吸完最后一口烟，踩灭火星，提起了箱子。
+他们没有握手。
+他走上踏板。
+她转过身，往出站口走去。
+---
+0003：绝对大女主
+文风名称： 绝对大女主
+NSFW： 否
+文风对应预设： 留光、小狗
+文风使用方向： 豪门商战、女强快穿、娱乐圈顶流、大女主爽文、高干
+文风参考： 职场精英女性题材、Femme Fatale风格叙事
+文风特点词： 锋利、上位者、冷艳、高反差
+文风特点介绍：
+强调“攻击性美貌”与“女王气场”，排斥一切幼态、软糯的描写。
+侧重骨相与线条的雕塑感描写，展现不可亵渎的距离感。
+通过“仰视视角”叙述，强调女主的绝对统治力与专业性。
+情绪极度克制，受伤时表现出的漠然优雅更具冲击力。
+环境多为冷调、高级质感，如丝绸、冷金属、利落的脚步声。
+文风示例：
+高跟鞋叩击大理石地面的声音，在空旷的酒会上如同某种冷冽的倒计时。她穿着一身裁减极简的黑丝绒礼服，背脊挺得笔直，天鹅颈在冷白灯光下透出一种大理石般的色泽。那个曾经让她卑微至极的男人挡在面前，眼神里带着卑微的惊愕。
+她停下脚步，修长且稳的手端起红酒杯，并没有看他，只是漫不经心地理了理指尖。
+他颤声叫她的名字，她微微挑眉，半勾起一抹毫无温度的笑。
+“抱歉，让一下。”她的嗓音低沉且清晰，掠过他时，冷香如刃。
+---
+0004：台湾乡愁
+文风名称： 台湾乡愁
+NSFW： 否
+文风对应预设： 留光、冬日小狗、行间、众生相、小狗
+文风使用方向： 怀旧生活流、岛屿叙事、酸涩暗恋、家族史、文艺电影同人
+文风参考： 黄春明、洪爱珠、赖香吟
+文风特点词： 潮湿、质感、物理、克制
+文风特点介绍：
+极度依赖日常物件（电扇、机车、塑料袋）建立情感根基。
+采用长段落与长句子，模拟潮湿闷热的岛屿节律。
+拒绝抒情性的怀念，情感仅通过动作、返乡、反复的日常呈现。
+强调听觉与触觉的真实性（机车轰鸣、油烟味、湿气）。
+叙事极其平实，不带任何修辞色彩，让生活本身发声。
+文风示例：
+台北午后的暴雨毫无预兆地砸下来，空气里迅速充斥着一股柏油路被激起的土腥气和沉重的湿意。他在窄小的骑楼下收起那把伞骨歪斜的黑伞，水珠顺着裤管滴落在发黄的瓷砖上。
+她就在这时从那辆熄火的旧机车上跨下来，摘掉被雨打湿的头盔，发丝贴在后颈，透着一种疲惫的凉。
+两人隔着几只滴水的塑料购物袋对视，谁也没开口。药店的卷帘门发出沉闷的金属声，隔壁传来的收音机声断断续续。
+他弯下腰，帮她拎起那袋浸透了雨水的苹果，手背碰到她的指尖，粗糙且冷。
+---
+0005：昭和日常
+文风名称： 昭和日常
+NSFW： 否
+文风对应预设： 留光、小狗
+文风使用方向： 治愈系、日系风格、平淡婚姻、战后怀旧、家庭伦理
+文风参考： 向田邦子、是枝欲和、小津安二郎
+文风特点词： 节律、静谧、克制、物语
+文风特点介绍：
+以季节律动为叙事轴心，通过天气与光线推动时间。
+室内空间作为情感建筑（如榻榻米边、玄关、饭桌）。
+将克制视为亲密，通过准备便当、调整衣领等实务表达爱。
+情绪处理极为干练，即使悲伤也会转向谈论天气或食物。
+记忆寄托在具体的器物上，不解释过去，只呈现当下的纹理。
+文风示例：
+走廊里的光线随着云朵掠过而忽明忽暗，风铃在檐下偶尔发出一两声短促的叮咛。他跪坐在榻榻米上，正专注地修补一只边缘剥落的漆器茶碗，动作稳得像是在凝固时间。玄关处传来木屐落地的声音，接着是推拉门滑动的轻响。她走进来，手里抱着一捆刚买的长葱和豆腐，身上还带着街头午后的余热。
+她没说好久不见，只是看着那个茶碗，轻声说，“那只碗，还是用以前的漆补最好。”
+他没抬头，只应了一声，“嗯，已经调好了。晚饭吃汤豆腐吗？”
+她说，“好，加一点姜泥。”
+---
+0006：工笔写意
+文风名称： 工笔写意
+NSFW： 否
+文风对应预设： 留光、众生相、小狗
+文风使用方向： 权谋、武侠、仙侠、古风言情、强强、历史正剧
+文风参考： 唐酒卿、Priest、梦溪石
+文风特点词： 古雅、韵律、克制、张力
+文风特点介绍：
+半文半白的语感，大量使用四字格和对仗，极具音律美。
+借景抒情，将人物情感投影到风雪、残烛、断玉等环境意象中。
+强调礼节与微动作（如拂袖、扣指），通过物理距离展现心理张力。
+突出身份等级带来的禁忌感，将欲望隐藏在克制的仪态之下。
+视觉效果宏大且精致，侧重服饰纹理与光影氛围的雕琢。
+文风示例：
+寒蝉凄切，长廊尽头灯火阑珊。他身着一袭玄色织金长袍，独立于阶前，任由料峭春风卷起衣袂，眉眼间尽至萧瑟。她自月洞门处缓步走来，珠翠轻响，每一步都踏在枯叶的碎裂声上。相距五步，她停下身形，敛衽一礼，姿态疏离而端正。
+他在袖中虚握成拳，指尖抵住那枚沁血的古玉扳指，面上却波澜不惊，只淡淡道，“多年未见，别来无恙。”
+她垂眸，视线落在二人之间那道明暗交叠的影子里，声音温软却清冷：“劳殿下挂心，一切皆好。唯有这庭中海棠，今年落得早了些。”
+---
+0007：雅韵流觞
+文风名称： 雅韵流觞
+NSFW： 否
+文风对应预设： 留光、小狗
+文风使用方向： 考据向红楼同人、明清背景小说、古典宅斗、雅致古风
+文风参考： 曹雪芹《红楼梦》、沈复《浮生六记》
+文风特点词： 瑰丽、骈散、考究、诗性
+文风特点介绍：
+严格遵循明清白话小说语法，排斥现代虚词。
+随文赋诗，将诗词歌赋自然织入叙事，而非生硬插入。
+运用骈文技巧，句子讲究平衡与四六对仗，极具古典韵律。
+极度精细的物质性描写（如具体香名、茶名），体现文人雅趣。
+拒绝说书人套路语，通过纯粹的意境交融实现场景转换。
+文风示例：
+正值晚香散尽，碧纱窗外翠竹敲风。他方踱至书案前，见那宣州紫毫旁搁着半盏残茶，香烟已冷，心下凄然。正踌躇间，忽闻湘帘微动，一人素衣娉婷，手托香盘而入。抬眼觑之，非他，正是旧时归人。两人并不言语，唯见红烛爆花，影落在断纹古琴之上，真个是：十年孤影冷，一夕旧梦还。
+她移步趋前，将那百步兰蕙尘添入炉中，低声言道，“这茶已是陈年银针，虽失了新香，却多几分甘苦，兄台何不啜之。”
+他听毕，不禁长叹一声：“重逢如昨，物是人非，亦不过一盏枯荣罢了。”
+---
+0008：沉默废墟
+文风名称： 沉默废墟
+NSFW： 否
+文风对应预设： 留光、小狗
+文风使用方向： 废土文学、硬核科幻、苏俄文学风、严肃反乌托邦
+文风参考： 塔可夫斯基、阿列克谢耶维奇、科马克·麦卡锡
+文风特点词： 肃杀、沉重、工业、荒凉
+文风特点介绍：
+绝对拒绝“油腻”的英雄主义，角色是处于衰败景观中的生物单位。
+物质表现主义，精准描述物体的密度、氧化程度与摩擦感。
+采用积木式长段落，句子沉重且具有累积感，模仿工业建筑的质感。
+强调人类在宏大、冷漠的工业废墟或地质时间面前的渺小。
+对白功能化且低能量，充斥着生存性的疲惫与技术化的冷漠。
+文风示例：
+混凝土梁柱上覆盖着一层厚重的、灰铅色的氧化皮，表面的裂缝里嵌入了数十年的酸雨残渣。
+他拖着沉重的帆布靴走在积满尘土的走廊里，每一次呼吸都能尝到空气中铁锈和霉菌混合的苦味。她坐在那台报废的柴油发电机旁，裹着一件油渍斑斑的粗羊毛大衣，指缝里全是洗不净的黑垢。
+两人在刺目的白炽灯影里对视。没有重逢的喜悦，只有这种凝固的、带有物理重力的沉默。
+他从口袋里掏出一块干硬的压缩饼干，掰开一半递过去。她说“水泵坏了”。他点点头，看着窗外那座在黄昏里逐渐坍塌的冷却塔。
+---
+0009：屿港潮汐
+文风名称： 屿港潮汐
+NSFW： 否
+文风对应预设： 留光、众生相、小狗
+文风使用方向： 港风、台风文艺片、冷色调都市、暗恋伤感、疏离叙事
+文风参考： 西西、钟晓阳、科尔姆·托宾、侯孝贤
+文风特点词： 疏离、潮湿、静默、清冷
+文风特点介绍：
+将“湿度”处理为一种物理阻力，强调空气的粘稠与缓慢。
+采用大段留白构建空间感，叙事节奏如潮汐般绵长稳定。
+严禁比喻，通过极致的物理事实（如轻抚织物、光线移动）提取情感。
+去除表演性的温情，文字如海水中漂洗过的鹅卵石般冰冷清晰。
+强调“事后感”，营造一种重要时刻已然过去、余下皆是清扫的怀旧氛围。
+文风示例：
+窗外的海雾正沿着狭窄的混凝土楼梯缓缓攀爬，空气里有一种干净而沉重的湿意。他站在那张漆面斑驳的圆桌旁，看着那只不锈钢水壶逐渐喷出白色的蒸汽，响声在空旷的房间里显得尖锐。她就在这时推门进来，提着一只湿透的纸袋，脚尖划过绿色的瓷砖地面，留下一道浅浅的弧。他们没有寒暄。
+她把纸袋放在流理台上，开始缓慢地拆解缠绕在一起的细线。
+他说，“船票在抽屉里。”她低头看着那块磨损的亚麻台布，手指无意识地抚平上面的褶皱。
+潮汐在远处撞击着防波堤，声音一下一下，沉闷而必然。
+---
+0010：明清章回
+文风名称： 明清章回
+NSFW： 否
+文风对应预设： 留光、小狗
+文风使用方向： 传统评书风小说、章回体武侠、民俗传奇、古典白话叙事
+文风参考： 《水浒传》、《三国演义》、施耐庵
+文风特点词： 传统、节奏、古拙、叙事
+文风特点介绍：
+强制要求对仗工整的双句标题（回目）。
+必须使用“话说”、“却说”、“且听下回分解”等评书转换词。
+强调诗词证史，在关键处插入“正是”、“后人有诗赞曰”进行点评。
+运用地道的古典白话词汇，排斥一切现代语法结构。
+人物登场或展示技艺时，需切换为骈文铺陈或定场诗。
+文风示例：
+【第十回：旧苑深处逢故里；半壶浊酒洗残年】
+话说当年那场变故之后，林中已有十年不闻故人音。此时却说在这荒郊野店之内，只有几个残酒杯，半盏昏黄灯。只见到那推门而入者，头戴一顶破毡帽，身披一领旧油绸，面色虽带风尘，那双眼眸却甚是犀利。柜台后老板娘抬眼一觑，不觉心头一震，手中心算盘响动渐消。他二人相对而立，半晌无言。正是：十年生死两茫茫，今日相逢在路旁。那汉子将手中铁剑往桌上一搁，冷声道，“讨碗热汤。”老板娘方才回过神，拭了拭眼角，强笑道，“官人稍等，这就来。”
+欲知后事如何，且听下回分解。
+---
+0011：民俗恐怖
+文风名称： 民俗恐怖
+NSFW： 否
+文风对应预设： 留光、小狗
+文风使用方向： 中式恐怖、无限流、民俗怪谈、惊悚玄幻、硬核灵异
+文风参考： 《咒》、《僵尸》、伊藤润二式风格
+文风特点词： 诡谲、阴冷、腐坏、压抑
+文风特点介绍：
+强调“纸与肉”的诡异结合，将民俗材料（浆糊、纸皮、竹骨）人体化。
+聚焦身体痛苦与暴力仪式（如针线缝口、棺材钉），展现封建恶意的实质化。
+通过“微笑的威胁”和“集体恶意”构建窒息感。
+极度强化的感官厌恶（如尸油味、湿漉漉的咀嚼声、红光如血）。
+叙事视角常伴随理智崩塌，呈现歇斯底里的不确定感。
+文风示例：
+祠堂里的红灯笼透出一种生肉般的色泽，晃得墙上的纸扎人影忽长忽短。他跪在冷硬的青砖上，喉咙里塞满了苦涩的纸灰，每喘一口气，肋骨深处都传来木头断裂的声音。她穿着那套褪色的嫁衣从棺木阴影里走出来，苍白的脸庞画着两团鲜红之色。她凑近了，一股腐肉拌着檀香的甜腻气味直钻鼻腔。他想喊，却发现嘴唇不知何时已被红线细密地缝死。她伸出枯瘦的手，指甲里满是黑泥，轻轻刮过他的脸颊，发出砂纸摩擦的声音。她说，“吃饱了，才好上路。”
+---
+0012：克系风格
+文风名称： 克系风格
+NSFW： 否
+文风对应预设： 留光、小狗
+文风使用方向： 克苏鲁神话、克系无限流、诡异复苏、极致肉体异化、惊悚
+文风参考： 戴维·柯南伯格、伊藤润二《螺旋》、杰夫·范德米尔
+文风特点词： 疯狂、黏稠、异化、不可名状
+文风特点介绍：
+将宇宙恐怖与极端的身体畸变结合，侧重自我的崩溃与肉体被侵占的恐惧。
+使用带有物理不适感的重度词汇（如脓疱、溃烂、黏液、蠕动）。
+模糊梦境与现实的边界，表现出认知污染带来的迷乱与偏执。
+对感官过载的描写：邪恶的几何图形、带颜色的气味、非人的震动。
+角色逐渐丧失作为人的主体性，转而将肉体视为容器。
+文风示例：
+海风中混合着一种陈年盐渍与腐烂软体生物的气味，沉闷地压在耳膜上。他在那间墙壁跳动着不洁脉搏的阁楼里见到了她。
+她已不再能被称之为“她”，半边面孔呈现出一种半透明的、布满黏液的膜状，数只色彩斑斓的畸形眼球在皮下不规则地滚动。他感到一种病态的诱惑，指尖不可抑制地颤抖，想要触碰那些不断溢出的湿滑组织。她张开嘴，声音像是从深渊底部传出的湿漉漉的摩擦。
+“你来晚了。”他看着自己的手指在昏暗光线下变得愈发细长，且指间开始生出淡色的薄膜。他跪倒在地，呕吐出一堆带有古老几何图案的暗红血块。
+---
+0013：晋江温情
+文风名称： 晋江温情
+NSFW： 否
+文风对应预设： 留光、众生相、小狗
+文风使用方向： 都市现代言情、校园生活流、纯爱、小甜饼、暗恋成真
+文风参考： 墨宝非宝、巫哲、余酲、北南、卡比丘
+文风特点词： 治愈、细腻、烟火、柔软
+文风特点介绍：
+视觉呼吸感：交替使用3-5句的中长段落（全景）与单行段落（特写/内心震动）。
+绝对白描：严禁比喻。通过描述物理震动、声音共鸣或光线效果替代形容词。
+细节苏点：通过喉结滚动、指尖微蜷、整理领口或挡风等下意识微反应展现爱意。
+生活肌理：浪漫发生于便利店、电梯、凌乱沙发或副驾驶座等充满洗衣液与热汤气的空间。
+流畅衔接：句子间逻辑严密，避免突兀转折，模拟现代都市生活的连贯流动。
+文风示例：
+晚上的便利店亮得有些晃眼，空调冷气里裹着一股淡淡的关东煮香气。他站在冰柜前，手指勾着一听冰可乐，还没来得及拿出来，就从玻璃的反光里看到了她。
+她穿着一身简单的米色针织衫，手里拎着一袋快过期的全麦面包，正低头在包里翻找着零钱。他动作顿了顿，收回手，关上冰柜。隔着两排货架，谁也没先开口。还是他先走了过去，顺手接过她手里的面包，放在收银台上，顺便把那罐可乐也推了过去。他声音压得有些低，带点儿北京初春那种微微的沙哑感。
+“没带手机？”
+她愣了半秒，抬头看他，眼里那点儿重逢的惊愕被温和的灯光冲淡了不少。
+“忘充了。”
+“行，”
+他扫码付了款，拎起袋子递给她，“走吧，送你回去。”
+---
+0014：暗黑童话
+文风名称： 暗黑童话
+NSFW： 否
+文风对应预设： 留光
+文风使用方向： 奇幻、哥特风格、无限流副本、暗黑少女心、寓言类
+文风参考： 尼尔·盖曼、提姆·波顿、格林童话原版
+文风特点词： 瑰丽、残酷、荒诞、纯真
+文风特点介绍：
+逻辑上的胡言乱语：世界遵循荒谬却严格的规则，角色表现出无邪的残忍。
+装饰性暴力：将恐怖描写得如糖果、珠宝般精美。
+极其淡定的叙述语气，理所当然地接受非自然现象。
+魔法是物理化的、具体的（如针线、骨头、机械齿轮）。
+玩偶屋视角，通过繁复的物品清单建立华丽且陈旧的氛围。
+文风示例：
+森林里的树木都是由碎裂的黑玻璃组成的，风一吹，便发出清脆且割裂的笑声。他穿着一件绣满枯萎蔷薇的燕尾服，正坐在坟墓前的茶桌旁，慢条理地用一把精巧的小锯子锯开一根白色的指骨。
+她从迷雾中走出来，脚下踩着那些会发出惨叫的红色菌类。她没有惊讶，只是礼貌地拎起裙角行了个礼，眼睛里镶嵌着两颗圆润的深蓝色纽扣。
+他说，“茶还没凉，只是糖放多了，甜得有些烫喉咙。”
+她坐下来，从胸口拉开一道隐形的拉链，取出一颗还在跳动的宝石心脏放在瓷碟里。
+“这是逾期的租金。”
+他笑了，露出象牙雕成的洁白牙齿。
+---
+0015：轻盈童话
+文风名称： 轻盈童话
+NSFW： 否
+文风对应预设： 留光
+文风使用方向： 治愈、童话、奇幻、散文、轻小说
+文风参考： 安房直子、宫泽贤治、托芙·扬松、圣·埃克苏佩里
+文风特点词： 感官联觉、匠人魔法、透明忧郁、液体律动
+文风特点介绍：
+抽象感觉转化为实体（感官联觉），如将悲伤形容为白桌布上的蓝影子。
+魔法与具体的手工艺或家务劳动（烹饪、缝纫、酿茶）紧密结合。
+动物作为礼貌的邻居或顾客出现，拥有正式的语言和得体的装束。
+情感表达透明且轻盈，通过消失或化为光芒替代沉重的哀鸣。
+句子如液体般流淌，节奏舒缓，充满联想式的长句。
+文风示例：
+窗外的风掠过紫罗兰色的黄昏，吹进厨房时尝起来像是一杯冰镇过的薄荷水。他正坐在桌边，耐心而轻柔地将一片落日的余晖缝进蓝色的衬衫袖口里。
+她推门进来，带起了一阵清新的银色哨音。他抬头微笑，并不惊讶，仿佛她只是去云端取了一罐蜂蜜刚回来。
+他指了指对面的椅子，轻声说，“请坐吧，月光正新鲜。”
+她坐下来，指尖渐渐化成透明的绿叶，呼吸里满是干草的香气，像是一场未完的重逢梦。
+---
+0016：诗酒武侠
+文风名称： 诗酒武侠
+NSFW： 否
+文风对应预设： 留光
+文风使用方向： 武侠、剑客、江湖、传统叙事、古风
+文风参考： 金庸、梁羽生、温瑞安、王家卫
+文风特点词： 半文半白、诗意融合、苍凉意境、笔墨身法
+文风特点介绍：
+半文半白的叙事节奏，使用古雅的虚词与句式营造历史厚重感。
+自然融合诗词意象，作为场景的“锚点”或人物心境的投射。
+强调“苍凉”的美学，在宏大山川与渺小侠客的对比中体现宿命感。
+动作描写如书法般流动，每一招一式都追求音韵美与视觉张力。
+关注物质的细节真实，通过温酒、墨香、锦缎纹理锚定江湖质感。
+文风示例：
+残阳如血，铺陈于龙门关外的龟裂黄土之上。他独立寒风中，腰间长剑发出一声微弱的龙吟，正应了那句“古道西风瘦马，断肠人在天涯”。她自风沙尽处走来，青丝飞扬，眸中映着一轮孤月。相距十步，他停下脚步，解下腰间酒壶递过。两人并无多余言语，唯有剑气如虹，划破寂静。她轻呷一口黄酒，任由辛辣入喉，低声道，“这酒尚温，剑亦未老。”他回首望向远方，只见烟雨江南已成旧梦，此生恩怨，尽付这一笔飞白。
+---
+0017：千禧电波
+文风名称： 千禧电波
+NSFW： 否
+文风对应预设： 留光
+文风使用方向： 青春小说、校园、怀旧、都市、酸涩流
+文风参考： 岩井俊二、安妮宝贝、王家卫、郭敬明
+文风特点词： 高饱和视觉、密闭隔离感、化学甜味、粘稠节奏
+文风特点介绍：
+高饱和度的视觉风格，如Lomo滤镜般的色彩对比，阳光刺眼而阴影浓重。
+“MP3”式的隔绝感，强调媒体介质（磁带嘶鸣、跳频CD、低码率音频）。
+关注人工香料与化学甜味，如盒装柠檬茶、薄荷烟、修正液的味道。
+句子长且粘稠，模拟闷热夏午永无止尽的潮湿与滞涩感。
+情感位移，不直接描述爱恨，而是通过融化的冰块或划痕来替代。
+文风示例：
+窗外的蝉鸣被耳机里的低码率MP3覆盖成一片模糊的底噪，空气里充斥着酸性蓝的过曝阳光。他靠在锈迹斑斑的楼顶护栏边，白色校服下摆被热风吹得乱响，散发出廉价洗衣粉和薄荷烟的气味。
+她走上天台，帆布鞋踩在滚烫的柏油地上。两人谁也没说话，只是盯着那一罐融化了一半的橘子汽水，在木桌上留下一圈深色的水渍。
+台风将至，天空呈现出一种淤青般的紫色，正如他在草稿箱里反复闪烁却从未发出的那条短讯。
+---
+0018：轻盈喜剧
+文风名称： 轻盈喜剧
+NSFW： 否
+文风对应预设： 留光
+文风使用方向： 职场、生活流、恋爱、轻小说、现代都市
+文风参考： P.G. Wodehouse, Terry Pratchett, Brooklyn 99
+文风特点词： 吐槽役内核、逻辑荒诞、去油自嘲、快节奏切换
+文风特点介绍：
+吐槽役内核，叙事者作为混乱世界中唯一的正常人进行冷面观察。
+节奏轻盈且冲突低压，用意外的尴尬消解沉重的戏剧感。
+减少比喻，采用超具体的动作描写来呈现物理性的搞笑场面。
+角色去油，强调自嘲与笨拙感，将缺点转化为可爱的生活细节。
+结构如镜头切换，在紧张时刻迅速接入无关痛痒的世俗碎念。
+文风示例：
+他正试图以一种霸道总裁的姿势靠在墙边，结果重心不稳，原地表演了一段复杂的现代舞才勉强站定。她推门进来时，刚好目睹了他与墙壁搏斗的最后阶段。
+两人对视了三秒，空气中回荡着拨号上网般的处理速度。
+他尴尬地清了清嗓子，决定先发制人：“其实我是在检查墙面的垂直度，顺便做了个拉伸。”
+她看着他手中那杯洒了一半的拿铁，冷静地回答：“哦，那我建议你下次检查天花板时穿双好点的防滑鞋。”
+---
+0019：晋江文学
+文风名称： 晋江文学
+NSFW： 否
+文风对应预设： 留光
+文风使用方向： 职业流、现代都市、强强、商战、逻辑正剧
+文风参考： Priest, 梦溪石, 祈祷君, Twentine, 微风几许
+文风特点词： 职业写实、心理位移、空间张力、密集逻辑
+文风特点介绍：
+拒绝浮夸身份，强调角色的专业素养、疲惫感与具体的职业动作。
+情感位移至物理反应，通过长段落描写角色对环境的被动反馈来隐喻内心。
+利用空间逻辑与物理距离构建浪漫张力，强调动作的连贯与精密。
+句子多层且致密，捕捉单一瞬间的复杂感，段落庞大而厚重。
+对白职能化且稀疏，埋藏在密集的日常生活逻辑与动作序列之中。
+文风示例：
+他戴上无菌蓝手套，乳胶拍击皮肤的声音在寂静的实验室里异常清晰，而头顶的荧光灯正以一种让人头皮发麻的频率微微震动。她推门走入，带进一缕冷雨气息。他没有抬头，只是专注地观察着试管中液体的沉淀，两人的距离精确地保持在一步半。这是他们分开后的第一次正式见面。
+他把报告放在桌上，声音毫无起伏：“数据在这里。”
+她看着他手背上因用力而绷起的青筋，那是长句般的压抑。
+她沉默了很久，才轻声应道：“雨下大了，你该回了。”
+---
+0020：鲜活日常
+文风名称： 鲜活日常
+NSFW： 否
+文风对应预设： 留光
+文风使用方向： 治愈、现代都市、陪伴、生活流、甜饼
+文风参考： 巫哲, 吉本芭娜娜, 高木直子, 卡比丘
+文风特点词： 生理真实、绝对去油、微动作层、呼吸律动
+文风特点介绍：
+强调角色的物理存在感（体温、重量、呼吸感），捕捉真实的人情味。
+节奏如呼吸般自然，交替使用描述环境的长段落与反馈情绪的短句。
+绝对去油，拒绝表演性的霸总或深情戏码，接受人物的笨拙与瑕疵。
+捕捉细小的微动作（抓鼻尖、调领口、发愣），营造鲜活的生命力。
+零隐喻，只描写摄影机能捕捉到的物理事实，用体感触碰替代抒情。
+文风示例：
+清晨的阳光透过百叶窗洒在乱糟糟的被褥上，空气里有股淡淡的肥皂味。他正坐在床边，低头跟一根死火系不上的鞋带较劲，头发乱得像个鸟窝。她推门进来，脚尖踢到了地上的空易拉罐，发声一声脆响。他抬头，眼睛还没完全睁开，带着点早起后的迟钝。
+两人就这样对视着，谁也没演那种深情久别的戏码。
+他抓了摆手，嘟囔了一句：“早。”
+她走过去，手心干燥而温热地贴在他手背上，自然地接过那根鞋带。这种不需要台词的重逢，才是真的活着。
+---
+0021：鲜活日常2
+文风名称： 鲜活日常2
+NSFW： 否
+文风对应预设： 留光
+文风使用方向： 市井、现实主义、职场、现代生活、北方叙事
+文风参考： 双雪涛, 班宇, 郑执, 金宇澄, 王朔
+文风特点词： 肉身感、对话穿假、情感累积、感官随机
+文风特点介绍：
+身体反应先于思想，强调生物本能的习惯动作（抠手、抓汗、换重心）。
+对白具有即时性，充斥着生活杂质、中断、重复与重叠。
+情感强度通过微小动作的反复累积来呈现，拒绝总结性的抒情。
+捕捉感官的不一致性，细节随人物注意力的游移而浮动，无主次之分。
+场景长段落推进，追踪人物在空间中的持续存在感与琐碎决策。
+文风示例：
+他站在那棵老槐树底下，反复搓着湿漉漉的掌心，又在牛仔裤上蹭了两下。烟抽到一半，火星子差点烫着手，他骂了一句，又把烟掐了。
+她走过来的时候，正忙着回手机短信，脚底下一滑，他下意识地伸手扶了一把，隔着厚毛衣都能感觉到她骨头架子的单薄。
+两人都没说话，那种尴尬在空气里来回打转。他没问她这些年去哪了，只是盯着她鞋尖上的一块泥巴看。
+她说：“这地方还是这么吵。”
+他点点头，又摇摇头，说：“是，也不全是。”
+---
+0022：海上旧梦
+文风名称： 海上旧梦
+NSFW： 否
+文风对应预设： 留光
+文风使用方向： 都市实感、民国背景、现代言情、讽刺、家庭伦理
+文风参考： 张爱玲
+文风特点词： 冷眼观察、社交摩擦、反浪漫现实、物质框架
+文风特点介绍：
+冷眼观察亲密关系，将其视为社会事实而非情感理想，充满算计与疲惫。
+句子长且致密，通过累积和延迟产生叙事重力，段落紧凑而从容。
+情感源自社交摩擦与失位，透过礼节、尴尬与阶级意识来显现。
+隐喻极少且高度功能化，侧重对服饰、家具、空间布局的字面描写。
+反浪漫的现实主义，情欲与平庸、自尊及习惯共存，不美化痛苦。
+文风示例：
+公寓走廊里的光线是惨淡的黄，空气里浮着一股经年累月的灰尘气。他站在那张红木供桌旁，正极其细致地拍打着衣袖上的褶皱，仿佛那是他此生唯一的牵挂。
+她推门进来，带起一阵冷风，两人在狭窄的玄关处相遇，这距离原本是亲密的，此刻却透着一股算计后的疲惫。
+她没说话，只是盯着他那双擦得锃亮的皮鞋，心里算计着房租与旧情哪个更轻些。
+他客气地欠了欠身，姿态是极标准的，唯有眼底那一抹厌倦是真的。这份重逢，到底也只是生活里的一道裂缝。
+---
+0023：胭脂寄情
+文风名称： 胭脂寄情
+NSFW： 否
+文风对应预设： 留光
+文风使用方向： 奇情、惊悚、灵异、怀旧、都市传说
+文风参考： 李碧华, 蒲松龄, 旧港报刊
+文风特点词： 执念驱动、短句如刀、奇情市井、毒舌通透
+文风特点介绍：
+角色被单一而强悍的执念（爱、恨、美、生）驱动，情感强硬且顽固。
+运用短促、有力的主谓结构，节奏如不规则的心跳，冷酷而迅猛。
+荒诞奇情与市井平凡混杂，鬼神在闹市中生存，产生强烈的叙事张力。
+语气通透且带讥讽，用讽刺解构痴情，用刻薄代替意象。
+关注感官的直接肉欲感（饥饿、腐败、冰冷），动词极具侵略性。
+文风示例：
+她等了。他没来。胭脂冷了。
+这世上的情分，原比一张报纸还薄。
+五十年不过弹指，她坐在窄小的廉租房里，面前是一碗冒着热气的廉价面条。他推门进来。
+老了。满面尘土，缩着脖子。
+两人对视。
+没有抱头痛哭，只有算计。她涂粉。一层。又一层。直到像个纸人。
+他说：“对不起。”
+她咽下一口面，笑了。声音像砂纸磨过地面。
+她说：“我不等来生，我只要这辈子。你还欠我一盒胭脂钱。”
+---
+0024：生活喜剧
+文风名称： 生活喜剧
+NSFW： 否
+文风对应预设： 留光、行间
+文风使用方向： 职场、同居、欢喜冤家、情景剧、现代都市
+文风参考： 李诞, 赵乾乾, 王朔, 请回答1988
+文风特点词： 碎嘴对白、器物触发、节奏性沉默、琐碎温情
+文风特点介绍：
+在日常琐事（共享厨房、群聊、外卖）中捕捉幽默，语言生动俏皮。
+对白驱动，每一段话都伴随着具体的日常动作，节奏紧凑不落空。
+利用日常器物（闹钟、猫、收据）作为喜剧触发点，物与人同台演出。
+善用转折与沉默作为包袱，在尴尬的停顿中传递意料之外的笑点。
+情感表达含蓄，通过互损、顶嘴与回避来展现人物间的羁绊。
+文风示例：
+他正撅着屁股试图从沙发缝里掏那只失踪了三天的袜子，冷不丁掏出一张两年前的超市小票。她推门进来，手里拎着两袋快餐，脸上的表情像是刚去参加了场格斗赛。
+“还没找到？”她问。
+“找到了这个。”他挥挥手里的收银小票，“原来当年你偷喝了我的酸奶。”
+空气静止了三秒。她把炸鸡往桌上一摔：“那是因为你弄丢了我的猫。”
+“猫在阳台上看风景呢。”
+两人对视一眼，他拍拍屁股站起来，很自然地接过炸鸡袋子：“行吧，看在炸鸡的份上，酸奶的事儿翻篇。”
+---
+0025：纯粹浪漫
+文风名称： 纯粹浪漫
+NSFW： 否
+文风对应预设： 留光
+文风使用方向： 恋爱、纯爱、陪伴、暗恋成真、现代都市
+文风参考： Sally Rooney, 村上春树, 王家卫, 堀与宫村
+文风特点词： 极致关注、生理共鸣、笨拙真诚、空间孤立
+文风特点介绍：
+浪漫源自对细节的高度关注（如呼吸节奏、领口光线），体现“被看见感”。
+描述具体的生理反应（体温、脉搏、肌肉绷紧）而非空泛的心理形容词。
+强调脆弱感与真诚，拒绝圆滑的套路，接受尴尬与羞涩。
+构建“二人世界”的孤立感，背景噪音淡出，只留下彼此的感官交互。
+将照顾与服务作为爱的第一语言，呈现出温柔的照顾逻辑。
+文风示例：
+咖啡馆的角落里，光线暖得像融化的琥珀。他一直盯着她捏着杯柄的指尖，注意到她指节因用力而微微泛白。他没说那些圆滑的情话，只是伸出手，掌心温热地覆在她手背上。她颤了一下，呼吸乱了半拍，忘了呼气。“别紧张。”他轻声说，声音低得只有他们能听到。背景里的人声和音乐都模糊了。他拿起旁边的餐巾纸，细致地擦掉她杯沿的一点水迹，动作自然得像在做一件理所应当的小事。“我记得你喝冰的会胃疼。”这种被彻底看清的瞬间，比拥吻更重。
+---
+0026：法式文学
+文风名称： 法式文学
+NSFW： 否
+文风对应预设： 留光、行间
+文风使用方向： 文艺、反思、情感随笔、现代文学、哲学叙事
+文风参考： 玛格丽特·杜拉斯, 阿尔贝·加缪, 帕特里克·莫迪亚诺, 安妮·埃尔诺
+文风特点词： 清醒孤寂、哲学欲望、记忆逻辑、叙事间距
+文风特点介绍：
+将情感转化为冷峻的反思，欲望通过智性过滤后呈现，克制而危险。
+叙事节奏舒缓，强调沉默的意义，对白往往是逻辑与渴望的博弈。
+记忆作为叙事架构，时间线重叠流转，模糊现在与过去的边界。
+语言精准、凝练且富有诗意，拒绝装饰性修辞，追求句式的平衡美。
+叙事者与自我的观察距离，呈现出一种清醒的痛苦与理性的温柔。
+文风示例：
+他等了。她没有到。光线留在那里，像是一种惩罚。他站在咖啡馆的露台上，看着街道在暮色中逐渐消融成一种无意义的灰色。他并不是在怀念她，而是在观察自己如何怀念。她推门走入时，动作带着一种精密的迟疑。两人坐下，对白像是一场逻辑与渴望的博弈。
+“你想过我吗？”她问。
+“只有在停止思考的时候。”他回答。
+沉默在杯盏间流淌。重逢不是为了和解，而是为了见证这种清醒的绝望。
+她推开窗，让外面的冷风吹进来，那种冷是具体的，正如他们之间无色透明的缺位。
+---
+0027：吐槽喜剧
+文风名称： 吐槽喜剧
+NSFW： 否
+文风对应预设： 留光
+文风使用方向： 生活、职场、现代散文、幽默、轻松
+文风参考： 大卫·塞达里斯, 诺拉·艾芙隆, 道格拉斯·亚当斯, 王小波
+文风特点词： 毒舌自嘲、荒诞日常、元叙事交互、节奏转向
+文风特点介绍：
+以机智、混乱与节奏感见长，叙事者带有一种“吐槽役”的自觉自嘲。
+利用微小细节放大现实的荒诞感，通过对比制造戏剧张力。
+幽默之下隐藏着真诚，笑声是作为生存本能的脆弱感宣泄。
+段落短促、充满转折，语言口语化且富有弹性，善用元叙事与读者沟通。
+情感表达“反套路”，在最严肃的时刻接入意想不到的市井笑料。
+文风示例：
+他跑起来的样子像个刚意识到烤箱还没关的倒霉蛋，而我，就站在那个被称为“破镜重圆现场”的地方，手里还捏着一个啃了一半的甜甜圈。他停在我面前，大喘气，发型乱得像被某种大型猛禽蹂躏过。
+“嘿，”他说。
+“嘿。”我看着他汗湿的衬衫，“你这重逢的开场白准备了几年？”
+他尴尬地挠挠头，试图找回点深情男主的尊严，但下一秒就被自己的鞋带绊了一下。我叹了口气，递过去半块甜甜圈。
+生活就是这样，你以为是场歌剧，其实只是个没排练好的脱口秀。但说实话，这甜甜圈挺好吃的。
+---
+0028：简白叙事
+文风名称： 简白叙事
+NSFW： 否
+文风对应预设： 留光、冬日小狗
+文风使用方向： 极简主义、现代文学、冷色调、悬疑、纪录流
+文风参考： 雷蒙德·卡佛, 早期村上春树, 北欧克制文学
+文风特点词： 删节美学、情感位移、事件孤立、延迟信息
+文风特点介绍：
+极致压缩，强调省略、克制与有意的空白，让意义在缺席中浮现。
+拒绝隐喻与评估性修饰，仅描述功能性物件与必不可少的动作。
+事件孤立，场景往往在情感解决之前截断，保持一种未完成的张力。
+语言简单，使用具体的动词，延迟关键信息的释放以引导读者推论。
+角色行为非表演化，情感被置换到沉默的余波与后续的平庸动作中。
+文风示例：
+房间里只有冰箱的嗡嗡声。他坐在那儿，看着那只杯子。杯子是蓝色的。她进来了。放下钥匙。钥匙撞击桌面，声音很脆。两人对视了一眼。他站起来，拍了拍裤子上的灰。“你瘦了。”她说。他点点头。没接话。她走到窗边，拉开了帘子。阳光照进来，地上的灰尘在动。“水开了。”他说。他拎起水壶，把水倒进杯子里。白烟升起来，挡住了他的脸。她没回头，只是盯着外面的一棵树。重逢就这样发生了，没有拥抱，也没有眼泪。
+---
+0029：现代甜宠
+文风名称： 现代甜宠
+NSFW： 否
+文风对应预设： 留光
+文风使用方向： 现代言情、恋爱、宠溺、陪伴、甜文
+文风参考： 顾漫, 墨宝非宝, 竹已
+文风特点词： 微反应在意、高颗粒度响应、松弛轻快、无条件肯定
+文风特点介绍：
+通过反射性的微动作（如护住头、调空调）展现关怀，而非空谈。
+高颗粒度的回应，全神贯注于对方的一举一动，将背景噪音全屏屏蔽。
+语气松弛轻快，利用调侃、打趣替代沉重的苦大仇深。
+以具体动作（剥葡萄、整理碎发）代替形容词，让爱意具有实体感。
+提供无条件的 Affirmation（全肯定），营造一个安全的“情绪气泡”。
+文风示例：
+他在车门顶边挡了一下手，防止她撞到头，动作自然得像呼吸。他关上车门，绕回驾驶座，顺手调低了空调的温度。“想吃什么？”他问，眼神始终落在她身上，哪怕窗外正有一场壮观的晚霞。她有些纠结地抓了抓头发：“还没想好，我是不是太磨叽了？”“不会，”他低笑一声，揉了揉她的发顶，“你有大把的时间慢慢想。我听你的。”他从扶手箱里拿出一盒剥好的葡萄，递到她嘴边。这种无条件的偏爱和随时待命的温柔，让这一场久别重圆的雨，都变得甜滋滋的。
+---
+0030：生活浪漫
+文风名称： 生活浪漫
+NSFW： 否
+文风对应预设： 留光、行间、众生相
+文风使用方向： 现代都市、同居、陪伴、琐碎流、文艺
+文风参考： 坂元裕二, 是枝裕和, 萨莉·鲁尼, 安东·契诃夫
+文风特点词： 肌肉记忆、稳定美学、物质清单、连续流动
+文风特点介绍：
+肢体默契：浪漫表现为不用言说的肌肉记忆。通过侧身避让、递毛巾、背对背入睡等无声协作展现关系深度。
+掌控美感：通过精确描述生活任务（单手倒车、快速切葱、合叠床单）展现“稳健的性感”，拒绝惊慌失措。
+物质告白：拒绝抽象形容。通过特定的水温（60°C）、食物质感（焦脆边缘的酸面包）和厚涂的黄油来证明爱。
+流动叙事：使用长而流畅的句子连接烹饪、进食、谈话与触碰，不设戏剧化停顿，对白穿插于动作之中。
+低保真浪漫：将讨论账单、天气或日程等生活琐事处理得与告白同等温柔，利用共同空间的共享构建安全感。
+文风示例：
+他正站在流理台后切着柠檬，刀刃压过果皮的声音利落且有节奏，那种处理琐事的稳定感让人心安。她推门进来时，他并没停下手中的动作，只是极其自然地往旁边侧了侧身，给她留出通往咖啡机的空当。他把切好的柠檬丢进温水里，递过去，指尖擦过她的指腹，动作里带着多年未见的、熟稔的肌肉记忆。“还是不加糖，对吧？”他说话时并没有看她，而是顺手拿起台布擦掉了一点水渍。这种在日常节律中交织的默契，让那些长达数年的缺位，都在热气的蒸腾中变得轻盈起来。
+---
+0031：秋水笔记2.0
+文风名称： 秋水笔记2.0
+NSFW： 否
+文风对应预设： 留光
+文风使用方向： 现代文学、纪录、怀旧、散文、成熟向都市
+文风参考： 石黑一雄, 川端康成, 王安忆, 早期 Priest
+文风特点词： 语法滑动、极端写实、情感力学、成年人克制
+文风特点介绍：
+采用滑动式的长句，通过连词追踪连续的动作，捕捉生活的持续性。
+极端写实，拒绝所有隐喻，信任物理事实（如冰箱嗡鸣）能承载情感。
+情感通过“力学”表达：空间距离、皮肤温度、物体摩擦力。
+成年人的克制，对话稀疏且礼貌，留出大量的负空间供读者补全。
+从触觉细节切入，关注双手的微颤与光影的位移。
+文风示例：
+她拧紧水龙头，看着最后一点水流旋进排水孔，在管道停止颤动后，才终于转身看向立在门边的他。他穿着一件深灰色的长风衣，肩膀上还带着点清晨的冷雾，两人之间的距离恰好是那种客气且安全的社交长度。他没有急着开口，只是注视着阳光在木地板上勾勒出的明暗边界，沉默在空气里有种透明的质感。“好久不见。”他最后说道，声音平稳得像是一段没有起伏的陈述。她点了点头，伸手拢了拢耳边的碎发，手指在发鬓处停留了一秒。这种极度的克制，让这间狭小的客厅充满了某种待解的力学张力。
+---
+0032：鲜活人生 v2.0
+文风名称： 鲜活人生 v2.0
+NSFW： 否
+文风对应预设： 留光
+文风使用方向： 治愈、现代都市、生活流、家庭、成长
+文风参考： 爱丽丝·门罗、雷蒙德·卡佛、李翊云、吉本芭娜娜
+文风特点词： 生理真实、流动感、环境侵入、旧物感
+文风特点介绍：
+强调躯体诚实，通过不自主的微动作（如咽口水、换重心）替代情感形容词。
+采用“然后”逻辑，使用长连句绑定琐碎动作，呈现生活的连续流动感。
+环境具有侵入性，世界不会为角色的情绪停摆，外部杂音常打破戏剧节奏。
+物件带有历史印记，通过描述具体的使用痕迹来锚定记忆与时间。
+叙事节奏模仿呼吸：长篇幅的感官流描写后，接一个短促有力的现实点破。
+文风示例：
+他站在巷口那棵老槐树下，反复揉搓着手心里那个边缘磨损的打火机，又弯腰拍掉裤腿上沾的一根草屑，空气里满是隔壁家炒咸菜的咸腥味和老式摩托车熄火时的黑烟。她推开那扇掉漆的木门走出来，手心里攥着一卷发皱的废纸，视线掠过他那件洗得发白的衬衫，又落在地上一个被踩扁的易拉罐上。两人谁也没先开口。一只麻雀扑棱着翅膀从房梁上掠过，带落了几片灰尘。他清了清嗓子，声音在潮湿的空气里显得有些干涩。那把伞，还搁在老地方。她点点头，指尖在那卷纸上用力掐出了一个白印子。
+---
+0033：静水互望 v2.0
+文风名称： 静水互望 v2.0
+NSFW： 否
+文风对应预设： 留光
+文风使用方向： 纯爱、现代都市、酸涩流、极简主义
+文风参考： 小津安二郎、爱德华·霍普、雷蒙德·卡佛、李沧东
+文风特点词： 压缩感、几何学、放大静默、反油腻
+文风特点介绍：
+绝对禁止明喻与隐喻，只描述事物本身，信任现实的原始张力。
+对情感进行“灭菌”处理，不点名情绪，只描述生理症状或注意力位移。
+强调亲密关系的几何学，通过精确记录角色间的物理距离与角度来展示情感。
+放大背景白噪音（如冰箱嗡鸣、钟表走时），以此取代内心独白。
+采用微距视角，在情绪高压时刻放大无关痛痒的细节，模拟创伤后的离解感。
+文风示例：
+他立在玄关的阴影里。她站在三步远的流理台旁。两人之间隔着一束从窗缝漏进来的、满是尘埃的灰光。他没有看她，视线盯着木地板上一块深色的水渍。她低头去拨弄指间那枚已经松动的戒指，金属撞击指节的声音在安静的厨房里异常清晰。谁也没有说话。冰箱压缩机转动时发出沉闷的嗡鸣声，盖过了外面街道上偶尔经过的喇叭响。他往前走了一步，鞋底在干燥的地面上摩擦出一声短促的刺响。她说，茶冷了。他停住脚，呼吸在空气里激起微小的频率。他说，我知道。
+---
+0034：沉浸电影
+文风名称： 沉浸电影
+NSFW： 否
+文风对应预设： 留光、众生相
+文风参考： 王家卫、大卫·芬奇、杨德昌、丹尼斯·维伦纽瓦、双雪涛
+文风特点词： 摄影机视角、视觉肌理、画内音、零心理描写
+文风特点介绍：
+摄影机视角：严禁心理描写（如“他感到”）。通过手指在红木桌上的不规则节奏、盯着未点亮屏幕的目光等外在动作外化焦虑。
+光影叙事：光是物理属性。详细描写轮廓光、剪影、忽明忽暗的霓虹或冷白的荧光灯。色调（如冷蓝/暖黄）直接界定情感温度。
+拟音细节：放大画内音（香烟嘶鸣、警笛远去、冰箱嗡鸣、碎石摩擦声）构建3D空间张力，并作为段落转场的衔接。
+剪辑节奏：通过段落切换模拟剪辑。短段落对应“跳接”呈现紧张感；长连句对应“跟拍镜头”铺设氛围。
+场面调度：角色必须与环境发生物理交互。斜靠门框、把玩火机、抚平裙褶或隐入阴影，利用空间深度传达疏离或压迫。
+文风示例：
+深蓝色的冷调月光掠过生锈的防盗窗，在斑驳的墙面上拉出一道锯齿状的黑影。他靠在门框边，指尖把玩着一只黄铜打火机，“啪”地一声，火苗窜起，映亮了他紧绷的下颌线和瞳孔里的微光。她站在对角的阴影里，半边肩膀被黑暗吞没，只有手中的烟蒂忽明忽暗。两人之间相隔五米。一辆地铁列车从地下深处咆哮而过，震得窗框上的铁皮发出细碎的抖动声，淹没了她未出口的半句话。烟雾在空气中翻滚，随后被穿堂风吹散。他关上打火机，金属盖扣合的脆响在寂静中回荡。你回来了。
+---
+0035：欢脱少女漫
+文风名称： 欢脱少女漫
+NSFW： 否
+文风对应预设： 留光
+文风使用方向： 恋爱、校园、喜剧、快穿、轻松
+文风参考： 月刊少女野崎君、辉夜大小姐想让我告白、齐木楠雄的灾难
+文风特点词： 情绪通胀、光速吐槽、颜文字、Q版化
+文风特点介绍：
+情绪高度膨胀，反应比诱因强烈百倍，将微小的起伏描写成末日或核爆。
+叙事采用双轨制，一边是情节推进，一边是叙事者如弹幕般的光速吐槽。
+颜文字即是视觉语言，利用符号代替形容词，直接传递视觉冲击。
+遵循二次元物理法则，角色会石化、灵魂出窍、背景突然开满鲜花。
+节奏如快切喜剧，抛梗、反转与反应瞬间完成，不留情绪过渡。
+文风示例：
+（！Σ(▼□▼メ)！！那个男人为什么会出现在这里？！）我感觉脑袋里仿佛炸开了一朵巨大的蘑菇云，整个人直接在原地石化成了灰白色的背景板！他穿着那件该死的白色衬衫走过来，每一步都带着自带的圣光滤镜和BlingBling的特效（这家伙是随身携带了鼓风机吗喂！）。相隔三年，重逢的第一秒，我的心跳速度直接飙到了每秒三千转！救命！谁来关一下这个心跳的警报器！他停在我面前，微微俯身，我甚至能看到他睫毛上闪烁的人形自走荷尔蒙。他开口了！声音低沉得像是在耳边放低音炮！“好久不见。”（并没有好久不见啊！我的理智已经坐火箭逃离地球了啊混蛋！(ノಠ益条）
+---
+0036：日系轻小说
+文风名称： 日系轻小说
+NSFW： 否
+文风对应预设： 留光
+文风使用方向： 青春、奇幻、校园、轻喜剧、异世界
+文风参考： 渡航、西尾维新、鸭志田一、米泽穗信
+文风特点词： 角色语调、漫符动作、口语化、生活颗粒度
+文风特点介绍：
+拥有强烈的角色过滤语调，叙述本身即带有性格偏见、嘲讽或深度分析。
+将漫画符号动作化，通过抓头、鼓腮、垂肩等夸张动作表现情感。
+极其口语化的叙事，句子节奏感强，像是一个人在脑内大声思考。
+关注生活的颗粒度，利用具体的品牌名称、贩卖机响声等锚定现代实感。
+对话驱动力极强，聚焦角色间的化学反应与连珠炮式的互怼。
+文风示例：
+这种像像是三流偶像剧里才会出现的“前任重逢”桥段，居然真的降临到了我这个毫无存在感的平庸高中生头上。我盯着路灯下那个正一边叹气一边踢着易拉罐的少女，内心已经开始了名为“逃跑路线规划”的逻辑博弈。“那个……”我试探性地开口。她猛地转过头，瞳孔收缩的幅度简直可以去拍科幻片了。她先是抓了抓那头乱糟糟的短发，然后用力鼓起脸颊，像是一只受惊的河豚。“你……你怎么会在这里？”“这句话应该我问吧。”我耸耸肩，指了指路边那家二十四小时营业的便利店，“除非便利店是你家开的。”沉默在橘红色的夕阳残影里横冲直撞。她低头看着脚尖，动作生硬得像个没涂油的机器人。
+---
+0037：港台都市
+文风名称： 港台都市
+NSFW： 否
+文风对应预设： 留光
+文风使用方向： 酸涩、怀旧、都市、文艺、暗恋
+文风参考： 王家卫、村上春树、朱天心、杨德昌
+文风特点词： 疏离感、流动性、无常、透明
+文风特点介绍：
+追求“空调房”般的冷感温度，情感被置于透明屏障后观察，凉爽而疏离。
+对时间与数字有特殊的恋物情节，利用精确的时刻、编号、过期日期锚定漂移的情感。
+叙事轻盈，排斥沉重的悲剧词汇，将忧伤描写为“轻微感冒”或“丢了钥匙”。
+结构呈蒙太奇状，通过情绪而非逻辑连接碎裂的思维片段，如同一叠立拍得照片。
+将都市孤独审美化，通过与物体对话、独处日常赋予人物静止的尊严。
+文风示例：
+一九九四年五月一日下午三点零七分，我在旺角的一间便利店里见到了她。便利店里的冷气很足，干爽且透明，空气里飘着一股过期罐头的金属味和收银机打印纸的热香。她站在冷藏柜前，正盯着一排保质期只剩两天的柠檬茶发呆。我走过去，站在她身后三公分的地方。我们之间隔着一种名为“时间”的玻璃。她转过头，视线在我脸上停留了零点五秒。那一刻，我觉得自己像是一张曝光过度的底片。“好久不见。”她说。语调轻得像是一粒灰尘落在窗台上。我看了看手表，指针正好跳过一个刻度。在这座城市里，重逢并不意味着抵达，仅仅是另一种形式的擦肩而过。
+---
+0038：华丽哥特
+文风名称： 华丽哥特
+NSFW： 否
+文风对应预设： 留光
+文风使用方向： 维多利亚、悬疑、西方罗曼、惊悚、暗黑
+文风参考： 勃朗特姐妹、莎拉·沃特斯、达夫妮·杜穆里埃、奥斯卡·王尔德
+文风特点词： 物质重力、长短句交响、礼节铠甲、腐朽辉煌
+文风特点介绍：
+强调物质的沉重感，侧重触觉与嗅觉（如羊毛的刺痛、煤烟味、湿冷的石板）。
+节奏如交响乐，利用迷宫般的长句描述氛围，接以如匕首般短促的句子点破惊悚。
+礼节即是角色的铠甲，越是情感浓烈时刻，外表越趋向极端的优雅与正式。
+追求腐朽的辉煌，在极致的美感中嵌入泥泞、铁锈或霉味，避免塑料感。
+物理性描写黑暗，聚焦蜡烛的微光界限、伦敦迷雾的厚度，而非心理抽象。
+文风示例：
+深冬的冻雨疯狂地敲击着庄园那扇厚重的彩色玻璃窗，空气中弥漫着陈旧天鹅绒的霉味和壁炉残灰的焦灼感。他站在那幅巨大的先祖画像下，指尖轻轻摩挲着袖口那枚冰冷的银质袖扣，脊背挺得如同一柄出鞘的剑，姿态疏离而高傲。沉重的橡木门缓缓开启。她拖着那条裙摆沾满泥污的黑纱长裙走进来，每一步都踏在木地板低沉的呻吟声中。相距十步，她停下身形。“梅森先生。”她的声音平稳得近乎残忍，像是一枚掉落在石板上的金币。“多年未见。”他没有回头。壁炉里的火光在他的侧脸上投下跳动的、狰狞的长影。在这座被时间遗忘的迷宫里，重逢不过是另一种形式的刑期开始。
+---
+0039：盛夏少年
+文风名称： 盛夏少年
+NSFW： 否
+文风对应预设： 留光、众生相
+文风参考： 巫哲、木苏里、细田守、新海诚、安达充、五月天
+文风特点词： 高饱和、少年心气、焰火气泡、碳酸感
+文风特点介绍：
+碳酸美学：叙事如冰镇柠檬汽水，清爽、透明、刺痛且甜。排斥成人文学的沉重内省，专注于高饱和情绪。
+动词恋爱：严禁使用“温柔地”等形容词。通过抛接水瓶、书本挡阳、踢椅子腿、共戴耳机等物理动作展现爱意。
+拍立得节奏：快节奏、重叠的对白中突然插入“冻结瞬间”。详细描写后颈的汗珠或光影里的微尘。
+过曝照明：拒绝阴影，世界在惨白猛烈的阳光下无处藏私。夜晚则由便利店灯光、路灯和焰火的人工亮度填满。
+少年速度：当情绪激荡时，角色必然进入“奔跑”状态。冲刺是默认语速。对白多为不完整的句子或俚语。
+文风示例：
+正午的太阳白得发烫，空气里充斥着柏油马路被烤干的焦味和震耳欲聋的蝉鸣声。他穿着一件领口洗得发松的白色T恤，单手拎着一只正往外冒着冷气的玻璃瓶汽水，大步流星地穿过那个老旧的篮球场。“喂！”我听见那声喊叫穿过滚烫的热浪。他停在球场边缘，汗水顺着修长的脖颈滚落进衣领里，眼神里的张扬气简直比头顶的烈日还要刺眼。三年没见，他还是那副不可一世的、野蛮生长的模样。他扬起手，将那瓶冰镇汽水划出一道漂亮的弧线精准地扔进我怀里。碳酸气泡在瓶子里疯狂炸裂。“跑这么慢，还没赶上那班公交？”他咧嘴一笑，牙齿白得晃眼。这一刻，我觉得这个夏天好像永远都不会结束。
+---
+0040：沉浸式感官写实
+文风名称： 沉浸式感官写实
+NSFW： 是
+文风对应预设： 留光
+文风使用方向： 都市、高干、硬核感官、写实
+文风参考： 物理性写实、硬核视觉电影
+文风特点词： 解剖学精度、雄性结构、雌性受纳、无隐喻
+文风特点介绍：
+丢弃模糊的抒情，以解剖学级别的精度描述身体物理参数：血管突起、肌肉张力、皮肤温差。
+侧重雄性结构的“力量与硬度”，强调骨骼的沉重感与发力时的筋腱质感。
+侧重雌性受纳的“生理内化”，聚焦失重感、皮肤拉伸与不自主的机体反馈。
+绝对禁止隐喻修辞（如花、剑、云），只使用接地气的、物理性质的直接词汇。
+叙事律动模仿体力消耗：高压时句子短促如喘息，舒缓时句子平稳如研磨。
+文风示例：
+他正坐在那张深色的皮质扶手椅里，领口敞开，露出锁骨处紧绷的线条和因燥热而微微起伏的胸肌，额间的汗珠顺着眉骨滑落进眼角。她推门进来，带进一缕冷空气，视线瞬间被他手臂上因发力而凸起的青色血管攥住。时隔五年，他看起来更像是一尊充满侵略性的、带着体温的雕塑。他站起身，阴影瞬间将她笼罩，沉重的压迫感伴随着汗液与烟草的混杂气味。他没有废话，粗糙的长指直接扣住她的下颌，迫使她仰起头。指腹下的皮肤因挤压而泛白。他呼出的热气扑在她的鼻尖，滚烫且厚重。这种近乎粗暴的物理连接，让她全身的汗毛瞬间竖立，呼吸在刹那间乱成了碎裂的节律。
+---
+0041：粗口直白肉欲
+文风名称： 粗口直白肉欲
+NSFW： 是
+文风对应预设： 留光
+文风使用方向： 暴力美学、硬核感官、情欲、强取豪夺
+文风参考： 限制级叙事、粗犷白话
+文风特点词： 器官直白、穿刺力学、雄性支配、粗口律动
+文风特点介绍：
+器官描写绝对直白，严禁使用任何雅致代词，必须使用最粗俗、最直接的生理词汇。
+关注穿刺力学，侧重描写肉体接合处的挤压、翻卷与摩擦的微观景象。
+建立极致的雄性支配感，将男性异化为“活生生的快乐引擎”，强调速度与耐力。
+女性被描述为被快感折服的“受用体”，聚焦于失智、痉挛与被填满的视觉实感。
+粗口作为叙事节奏，对白是 imperative（指令式）且带有羞辱性质的，用于打破伪善。
+文风示例：
+他喘着粗气，浑身的汗液像浆糊一样粘稠，那根狰狞的肉棒青筋毕露，在昏暗的灯光下跳动着令人心惊的脉搏。相隔数年，他再次把她压在身下，没有丝毫温情，只有野兽般的宣示。他一边咒骂着粗鄙的字眼，一边猛地掐开她的双腿，视线死死锁住那道早已湿透的肉缝。他动作粗鲁，没有任何前奏，沉重有力的胯部直接撞开那层紧窄的软肉，整根没入。她发出一声变了调的尖叫，指尖死死抠进床单。低头盯着那处被撑得几乎透明的粉色肉褶，恶狠狠地在音浪里吐出肮脏的称赞。这种纯粹的、毫无遮羞布的野蛮贯穿，瞬间摧毁了所有假装的疏离。
+---
+0042：淫靡动态特写
+文风名称： 淫靡动态特写
+NSFW： 是
+文风对应预设： 留光
+文风使用方向： 极度肉欲、感官特写、颓废、禁忌流
+文风参考： 限制级、官能写实
+文风特点词： 宏观变焦、听觉湿润、吞噬感、液体溢满
+文风特点介绍：
+叙事视角集中于身体耦合处的一平方英寸，详细记录肉体形变与进出细节。
+强化听觉的“湿润感”，使用丰富的拟声词（如咕啾、噗滋、啪啪）构建黏糊的听觉维度。
+细分进出动态：入口处的挤压、深处对子宫口的撞击、拔出时的真空抽吸感。
+追求液体溢出的视觉奇观，描写爱液、汗液与白沫在摩擦下的混合状态。
+将女性受体描写为具有“吞噬感”的生物体，呈现其吸吮、咬合与颤栗的主动反应。
+文风示例：
+他每一次猛烈的推进，都会带起一阵令人面红耳赤的“咕啾”水声，那是大量粘稠的汁液在高温摩擦下被搅动出的声响。两人在汗湿的床单上翻滚，相隔三年的重逢被浓缩成这一处方寸之地的博弈。他紫红色的冠头反复撑开那圈被磨得通透的粉红肉褶，深埋进滚烫痉挛的肉壁里。她双眼迷离，每一次被顶到深处时都会发出破碎的抽息，内里的嫩肉死死咬住那根跳动的青筋。白色的泡沫随着激烈的抽插堆积在紧窄的入口。他猛地一记深撞，研磨着那处最敏感的凸起，伴随着粘腻的撞击声，她感受到了那种近乎要把他整个人吞进腹中的战栗。
+---
+0043：温柔Nsfw
+文风名称： 温柔Nsfw
+NSFW： 是
+文风对应预设： 冬日小狗
+文风使用方向： 治愈向H、细腻官能、温情情欲、救赎
+文风参考： 优雅官能文学、温柔情色
+文风特点词： 优雅克制、微距细节、感官联觉、照护余韵
+文风特点介绍：
+拒绝粗鄙词汇，使用医学性或正式的中性名词（如“性器”“爱液”）。
+细致描写生理细节与动作过程，强调呼吸、体温与声音的互动。
+采用“动作+感官+心理”三重描写，节奏温和且允许安抚性的停顿。
+Dirty Talk 风格为低语和呢喃，以引导与尊重为基调，无命令与羞辱。
+重点突出高潮后的细致照护与温情拥抱，追求美感与真实并重。
+文风示例：
+他微凉的指尖滑过她微微颤动的腰侧，随后轻轻覆盖住那处湿润的性器，动作轻缓得如同在确认一件稀世珍宝。相隔数年的重逢，所有的思念都在此刻作了极致温柔的探索。他俯身在她耳畔呢喃，嗓音沙哑却满含宠溺：“别紧张，跟着我的呼吸慢慢来，好不好？”他缓缓顶入，感受着穴道层层收紧的挤压感，腹部交叠处的体温迅速攀升。每一次深层的触碰都伴随着她急促而短促的呼吸声，爱液顺着大腿根部缓缓流下。当高潮的浪潮终于平复，他并没有急着撤离，而是紧紧拥抱着她，亲吻着她被汗水打湿的鬓角，动作轻柔地擦拭着两人交融的体液，让这份破镜重圆的余韵在宁静的夜色中无限拉长。
+---
+0044：直白Nsfw
+文风名称： 直白Nsfw
+NSFW： 是
+文风对应预设： 冬日小狗
+文风使用方向： 硬核情欲、肉文、调教宠溺、本能驱动
+文风参考： 露骨官能、本能文学
+文风特点词： 露骨直白、微距镜头、多轮高潮、宠溺调教
+文风特点介绍：
+采用最直白、露骨的生理本能词汇（如“鸡巴”“骚穴”），杜绝修饰。
+微距透视肉体细节：子宫口吸附、龟头摩擦、肌肉抽搐及体液混合质感。
+必须多次切换体位，主动探索插入深度与角度，保持动作高效且多变。
+以“调教式Dirty Talk”为主导，语气温柔亲昵，侧重引导与哄诱。
+射精伴随强烈的生理表现（跳动、压迫感），强调事后的爱意照护感。
+文风示例：
+他粗鲁地掰开她丰满的臀肉，那根狰狞的鸡巴在空气中跳动着，顶端早已溢出了晶莹的粘液。分开三年，重逢后的第一场博弈便是在这湿冷的后巷。他低声在他耳后喘气，话语里全是露骨的宠溺：“乖，夹紧点，让我操进去好不好？”随着一记重重的沉身，硕大的冠头直接撞开了紧闭的骚穴，深埋进滚烫的内里。他疯狂地抽送，微距镜头下能清晰感知到内壁褶皱被强行抹平的摩擦感，大量的淫水随着撞击啪啪作响。她被顶得双眼失神，娇嫩的子宫口被迫承受着一轮又一轮的暴力压迫，全身肌肉因连续的高潮而剧烈抽搐。他在最后一记深刺中猛然射精，滚烫的精液喷射在深处。事后他温柔地亲吻她的脊背，哄着她慢慢擦净腿间的狼藉。
+---
+0045：秋水笔记
+文风名称： 秋水笔记
+NSFW： 否
+文风对应预设： 冬日小狗、行间、众生相
+文风参考： 川端康成、石黑一雄、王安忆、Sun Ganlu、Modiano
+文风特点词： 运镜感、绝对白描、成年人克制、有余白
+文风特点介绍：
+运镜语法：使用多连词（和、同时、当...时）的长连句追踪连续动作，模拟平移镜头，拒绝破碎的断句。
+极端白描：排斥隐喻与评估性修辞。不描述“沉重的沉默”，只描述“冰箱的嗡鸣声”。相信物体本身即是情感。
+物理情感：情感不被命名，而是通过空间距离、体温落差、织物摩擦力或水流阻力等物理参数精准表达。
+负空间留白：角色表现为极度自持，对话简练得近乎礼貌。在“点到为止”的动作后戛然而止，将余韵交给读者。
+质感切入：场景多从光影位移、双手微颤或皮肤纹理开始，不以情节起手，强调时间的线性连续性。
+文风示例：
+他立在玄关处的阴影里，手中还拎着那只磨损严重的公文包，肩膀上沾着一点外面刚落下的细碎雨渍。她正站在流理台旁清洗一只旧茶杯，水流哗啦啦地冲刷着瓷器边缘，在管道停止颤动后，她才缓缓关掉开关，拿过干布仔细地擦拭起来。两人之间隔着三米宽的客厅，谁也没有急着踏过那道明暗交叠的边界。他注视着她拢起耳边碎发的动作，指尖在鬓角处停顿了一秒，随后才极其自然地垂下。多年后的重逢没有戏剧性的对白，只有这种在寂静中缓慢流淌的、关于距离的确认。他轻声说，雨大了起来。她点了点头，把茶杯放回原处，瓷器碰撞木质台面发出一声温润的轻响。
+---
+0046：鲜活人生
+文风名称： 鲜活人生
+NSFW： 否
+文风对应预设： 冬日小狗、行间、众生相
+文风参考： 雷蒙德·卡佛、萨莉·鲁尼、安妮·埃尔诺、爱丽丝·门罗、李翊云
+文风特点词： 生理诚实、环境入侵、旧物感、不洁净的真实
+文风特点介绍：
+躯体诚实：拒绝情绪化形容。通过咽口水、反复换脚支撑、揉搓衣角或眼皮沉重感等非自愿微动作替代“紧张”或“悲伤”。
+连词律动：生活是流动的而非剪辑的。频繁使用“然后”、“并且”绑定琐碎动作，营造一种无法停歇的、连续的生命质感。
+indifferent 环境入侵：剧情不因角色情绪停摆。关键时刻总有路过的卡车、桌上的苍蝇或邻居的斥责声打破戏剧感。
+旧物定位：物品绝非象征，而是带历史的工具。描述“2018年有缺口的杯子”而非简单的“杯子”，锚定记忆与时空。
+呼吸结构：采用长篇幅感官流（吸气）描写动作与感官，突然接一个极短的句子（呼气）作为现实或意识的冷酷破局。
+文风示例：
+他在巷口那个快要报废的自动贩卖机前停下，反复按着那个已经褪色的橘子汽水按钮，机器内部发出沉闷的轰鸣声，却始终没有东西掉出来。她踢着路边的空易拉罐走过来，头发被晚风吹得有些乱，身上还带着一股廉价洗衣粉的味道。两人在路灯惨淡的黄光里撞个正着。他下意识地拍了拍裤腿上的灰，又伸手去掏口袋里已经揉皱的香烟盒，却发现里面只剩下一张超市小票。她没说好久不见，只是盯着机器下方那个空荡荡的取货口说，那台机器三年前就坏了。他点点头，哦了一声，随后两人就那么沉默地站着，听着隔邻居大声呵斥孩子的声音，以及远处模糊的机车轰鸣。
+---
+0047：红楼梦
+文风名称： 红楼梦
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 古典言情、家族兴衰、宅斗、群像戏、同人创作
+文风参考： 曹雪芹《红楼梦》
+文风特点词： 章回体、诗意交织、琐事见深、礼节风物
+文风特点介绍：
+叙事与抒情并重，常以诗词、对联、谜语提升文学性与意境感。
+对白密集且极富层次感，完美呈现身份差异、性格特征与情感曲折。
+高颗粒度描写生活琐事（衣食住行、礼节往来），在日常中展现社会风貌。
+环境与风物描写精致考究，花气、月色、器物等皆带有命运象征意味。
+语言雅致流畅，多用白话叙事，在细腻的氛围渲染中构建悲剧美学。
+文风示例：
+话说宝玉正独立于大观园藕香榭的残荷边，见那水色凄迷，心下正自悲悯。忽闻身后微草响动，一人素衣娉婷，手携香帕，竟是阔别数载的林妹妹。宝玉不觉痴倒，只道是梦幻一场，忙趋前一步，颤声道：“好妹妹，果然是你回来了？”黛玉低眉垂睫，见他依旧是那副痴顽模样，不觉眼中已有泪光，却强撑着冷笑道：“谁是你的好妹妹？不过是客居路过，见这里的景致还罢了，进来瞧瞧。”宝玉听了，已知她那股子小性儿没改，心头反觉一股久违的暖流，忙笑说：“还是这般嘴利。那茶已温了三年，且请入内一坐？”黛玉啐了一口，嘴角微抿，这一场重逢竟在花气清冷中，透出几分旧时缠绵。
+---
+0048：冷艳残情
+文风名称： 冷艳残情
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 虐恋、现代文学、女性视角、都市孤寂、破镜重圆
+文风参考： 李碧华、张爱玲、玛格丽特·杜拉斯
+文风特点词： 情感无情、感官清醒、美丽残破、博弈张力
+文风特点介绍：
+融合残酷、欲望与清醒的自我意识，拒绝多愁善感的救赎叙事。
+展现爱作为依恋、习惯、执念或谈判式生存的本质，美丽与伤害共生。
+句式长而审慎，负载着肉欲细节与道德警觉；短句则用于直接揭露。
+意象直接且具象化，与后果紧密结合，拒绝纯装饰性的抒情。
+对白精准、带刺且充满负荷，沉默往往带有战略性的博弈意味。
+文风示例：
+咖啡厅里的冷气开得太足，像是要把最后一点人情味都冻成冰渣。他坐在对面，手指缓慢地磨蹭着那只昂贵的腕表，眼神里透着一股因算计而产生的倦怠。她推门进来，黑丝绒裙摆掠过地毯时毫无声息，美得像一具刚从橱窗里取出的精致尸体。两人对视，没有久别重逢的泪眼婆娑，只有一种互相确认残破程度的默契。“还要回来吗？”他问，嗓音低沉得像是在谈一桩亏本的生意。她勾起一抹讥讽的笑，指尖划过杯沿的裂缝：“只是来看看，当年的伤口结痂了没。”重逢不是为了和解，而是为了见证那场缓慢的腐蚀。这种温柔是有毒的，他们都心知肚明，却谁也不肯先放手，任由这份残缺的爱在暮色中继续勒紧脖颈。
+---
+0049：酸涩拉扯
+文风名称： 酸涩拉扯
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 成年人恋爱、破镜重圆、遗憾向、生活流
+文风参考： 细腻酸涩文学、现代克制主义
+文风特点词： 延迟回应、近距离对峙、拒绝定论、重复消耗
+文风特点介绍：
+依靠未解决的欲望与长期摩擦维持叙事，酸涩源于无法定型的亲密。
+严格减少比喻，情感通过序列、持续时间或具体的决策行为来替代。
+强调时机错位：迟到的答复、正确但过时的行动、未被选择的澄清。
+对白稀疏务实且战略性残缺，最重要的信息总是在沉默中被扣留。
+节奏带有拖拽感，通过长篇幅的近距离相处与短促的无果收尾交替。
+文风示例：
+他把车停在那个十字路口，雨刮器机械地左右摆动，在挡风玻璃上留下模糊的弧线。她坐在副驾驶位，低头摆弄着那个三年前他送的旧打火机，金属盖开合的声音在逼仄的空间里重复了五次。谁也没去提那条已经过期很久的道歉短信。“下个月我要调职了。”他开口，语气平静得像是在播报天气。她过了足足半分钟才应了一声“哦”，手指在打火机的刻纹上用力按了一下。原本可以解释，可以拥抱，甚至可以彻底决裂，但他们只是在红灯变绿的间隙里，极其默契地选择了维持现状。这种在靠近与撤退之间反复横跳的磨损，比分离本身更让人疲惫。车轮滚过积水，带起一阵沉闷的水声，重逢就这样在一次次未完成的对话中，变得愈发粘稠。
+---
+0050：日常喜剧
+文风名称： 日常喜剧
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 职场日常、都市生活、欢喜冤家、治愈系
+文风参考： 坂元裕二、生活流喜剧、轻快写实
+文风特点词： 误会错位、侧向生长、非表演幽默、生活摩擦
+文风特点介绍：
+扎根于一日三餐、通勤及琐碎不便中，语感轻盈但不甜腻。
+幽默源于时机错误、反应迟钝或生活摩擦，而非生硬的笑料或夸张。
+浪漫感侧向生长，通过共同经历微小的不便和重复的日常建立联系。
+角色保持高度的社交功能与独立性，不强求命运感或戏剧性高潮。
+句子多用长句追踪动态流，短句用于落地幽默感或意外的转折。
+文风示例：
+他正对着电梯里那块像哈哈镜一样的金属板整理领带，结果用力过猛，把自己勒出了一连串惊天动地的咳嗽。她拎着一袋还没干透的洗涤剂就在这时候钻了进来。两人在密闭的空间里对视了三秒，空气里弥漫着一股浓郁的薰衣草香精味和尴尬。“你这重逢造型挺别致啊，”她看着他涨红的脸，顺手递过去一张发皱的餐巾纸，“像个刚被生活掐住脖子的总裁。”他边擦眼泪边嘴硬：“我这是在做肺活量测试。你呢？打算去洗劫哪个洗衣房？”“猫尿床了，这是它的遗物。”电梯门叮的一声开了，他们同步跨出脚步，又差点撞在一起。这种完全没有预想中深情戏码的会面，反倒让那些断掉的年岁，在一句不咸不淡的互损中接上了轨。
+---
+0051：缓慢意识
+文风名称： 缓慢意识
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 文艺片风格、女性文学、自省叙事、现代都市
+文风参考： 成年人沉静写实、意识流变体
+文风特点词： 持续觉知、非高潮结构、时间漂移、躯体在场
+文风特点介绍：
+关注持续的觉知而非戏剧性进展，追踪思绪与身体在场感如何展开。
+时间是连续的，不被转折点分割；情感在习惯与微小偏差中累积。
+严禁隐喻，感官细节必须是字面化的、情境性的功能观察。
+场景不刻意寻求解决，而是以减弱、停顿或无修饰的过渡收场。
+采用长句承载感知流，短句用于注意力的焦点切换，语感不急不躁。
+文风示例：
+阳光在米色的旧书架上缓慢移动，带起几粒漂浮的尘埃。他坐在对面的旧沙发里，双腿略显生硬地交叠在一起，视线在墙上的那幅干花挂画上停留了很久，久到外面的树影已经从他的左肩移到了胸口。她并没有催促他开口，只是继续低头给阳台上的绿植剪枝，剪刀咬合的声音沉闷且有规律。两人就在这种凝固的时间里各自存在着。重逢不是一个瞬间的爆发，而是这种持续的、关于彼此呼吸频率的再次适应。她注意到他外套上的扣子松了一颗，原本想说点什么，但那个念头就像掠过窗边的飞鸟，无声地消失在了一分一秒的流逝中。这种不需要给出答案的对坐，让这间屋子充满了某种静止的重力，直到晚钟在远处沉沉敲响。
+---
+0052：旁观记录
+文风名称： 旁观记录
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 现实主义、冷淡风、悬疑观察、极简主义言情
+文风参考： 极简主义文学、非中心化叙事
+文风特点词： 去中心化、物理空间、无隐喻观察、节制呼吸
+文风特点介绍：
+从在场观察者的位置切入，严禁使用抒情性的隐喻或象征类比。
+依靠 concrete 的感知、时间序列与物理位置建立意义，不命名情绪。
+情感呈现为节制、延迟与日常动作的实时反馈，拒绝美学化痛苦。
+利用空间距离与肢体朝向代替心理描写，强调行动的逻辑顺序。
+采用精细控制的长句捕捉多重观察，短句标记注意力的位移。
+文风示例：
+他站在便利店的自动门外，保持着大约两米的距离，视线穿过玻璃落在收银台前的她身上。她正弯腰整理货架上的易拉罐，每一次拿起与放下的动作都伴随着微小的金属撞击声。他在路灯下站了三分钟，期间换了两次支撑重心。她直起身，拿过一旁的扫帚，动作连贯且不带停顿地清扫着地面上的碎纸。两人始终没有视线接触。他往前走了两步，鞋底在干燥的柏油路上摩擦出一声细响，随后他停在垃圾桶旁，从口袋掏出一个揉皱的塑料袋丢了进去。她放下扫帚，转头看向窗外，此时一辆公交车正好进站，白色的灯光刷过她的面孔，随即又迅速暗淡下去。这种基于物理轨迹的交错，在没有任何言语的加持下，记录了一场极其克制的归来。
+---
+0053：暮色日常
+文风名称： 暮色日常
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 文艺言情、都市漫步、疗愈系、现代生活流
+文风参考： 法式电影感、港台文学、萨莉·鲁尼
+文风特点词： 低分贝浪漫、微调互动、时空纹理、非所有权
+文风特点介绍：
+融合多地文学韵味，浪漫在于低分贝的共处而非戏剧性的告白。
+严禁通过隐喻解释感受，利用物理序列、微调动作与时空纹理替代。
+强调情感积累于“如何细心地做事”，如走路的步幅调整、处理物品。
+严格执行“去油”指令：无支配语言、无占有欲表达、无表演性关怀。
+句子长而有层次，段落节奏如呼吸般起伏，避免生硬的断裂感。
+文风示例：
+黄昏的光线像是一层薄薄的灰尘，覆盖在街道两旁的梧桐树叶上。他配合着她的步调往前走，两人的肩膀之间始终隔着大约十公分的距离，能感觉到对方身上那层淡淡的、混合着凉风的皂香。她提着一个沉甸甸的牛皮纸袋，每走几步就调整一下抓握的位置。他并没有直接接过纸袋，只是在转角处稍微放慢了速度，用身体挡住了迎面而来的风，轻声说，前面那家面包店的灯亮了。她看了看那抹橘色的光，指尖微微松动，随后又握紧。重逢在他们的语境里，不是一种宣誓，而是这种可以一起虚度时间的默契。沉默在空气中流淌得异常稳健，没有试探，也没有索求。这种基于尊重与共存的流动感，让这段缺位的岁月在两道并排的影子里，显得异常轻盈。
+---
+0054：港台文学
+文风名称： 港台文学
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 都市现实、伤感文学、怀旧、心理流小说
+文风参考： 白先勇、西王、邱妙津、也斯
+文风特点词： 慵懒疏离、多感官叠加、对白主导、文学性自省
+文风特点介绍：
+文字质感潮湿闷热，呈现缓慢细腻与疏离感伤交融的慵懒基调。
+通过气味、触觉、光影等五感层次营造真实且极具亲切感的质感。
+对白比例必须超过40%，且主导剧情，口吻贴近生活，允许断续与含糊。
+严禁直接宣泄情绪，利用日常物件、微表情与环境变化隐晦勾勒内心。
+叙事结构灵活，允许跳切、闪回与留白，通过碎片化叙事打造文学想象。
+文风示例：
+咖啡馆里的冷气像是坏掉的钟表，固执地吐着潮湿的凉意。他盯着杯沿那一圈干掉的咖啡渍，手指无意识地拨弄着那张泛黄的旧车票。“什么时候回来的？”她问，嗓音里带着点台北午后特有的慵懒。他抬起头，视线越过柜台上那只眯着眼的橘猫，轻声答道：“雨季开始的时候。”“还是老样子，总喜欢踩着湿气走。”她自嘲地笑了笑，低头搅动杯里的冰块，冰块撞击瓷壁的声音在寂静里显得格外清脆。“票根你还留着。”“嗯，忘了丢。”这种碎碎念式的对话里藏着某种近乎窒息的张力。他看着窗外那些被水雾模糊的霓虹灯，明白这种重逢不过是另一种形式的游离。空气里那股陈旧的、混合着雨水与焦糖的气味，正缓慢地吞噬掉他们之间最后一点尚未说出口的体悟。
+---
+0055：慵懒潮生（台湾+爱尔兰）
+文风名称： 慵懒潮生（台湾+爱尔兰）
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 伤感言情、生活碎片、成年人情感、海滨叙事
+文风参考： 白先勇、詹姆斯·乔伊斯、萨莉·鲁尼
+文风特点词： 潮湿重力、对白驱动、沉陷情绪、符号叙事
+文风特点介绍：
+氛围湿润且纠缠，融合了岛屿沿海的潮湿感与爱尔兰式的阴雨薄雾。
+句式破碎，常省略主谓语，使情绪悬浮在文字空隙中。
+对白占据统治地位，每一段落必须由对话驱动故事与情感。
+人物气质疲惫且带有一丝自嘲，爱意表达往往是拉扯且暧昧的。
+符号化叙事：湿透的被褥、过期的明信片、冷掉的啤酒。
+文风示例：
+屋顶的雨滴断断续续，在生了霉斑的墙面下积起一小滩水，空气里全是那种让人昏沉的咸湿气。“酒还没喝完。”他盯着桌上那只剩半口的苦啤酒，嗓音低得像是在自言自语。“这地方还是这么湿。”“嗯。”“我以为你不会等。”她靠在窗边，雨衣上的水珠顺着衣角滴落在地板上，发出一声声沉闷的闷响。他笑了联，带着点台湾腔里的软糯和爱尔兰式的冷幽默：“没地方去，这里房租还没到期。”沉默像潮汐一样涨了上来。他没问她这些年在哪，只是看着那张压在酒瓶下的、从未寄出的明信片。这种在潮湿中逐渐沉陷的重逢，没有只言片语的承诺，只有这种在酒精与雨声中反复拉扯的疲惫感，让一切告白都显得多余。
+---
+0056：毒舌小狗
+文风名称： 毒舌小狗
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 欢喜冤家、轻小说、都市、沙雕、破镜重圆
+文风参考： 吐槽役主播、毒舌解说
+文风特点词： 极限嘲讽、emoji乱入、当场打脸、全知记仇
+文风特点介绍：
+叙述者是一只全程开麦的毒舌小狗，不仅爱管闲事，还永远在翻白眼吐槽。
+所有吐槽强制使用【毒舌小狗：……】格式，且必须包含 emoji 或颜文字。
+每个场景至少触发3条以上吐槽，吐槽内容必须有立场、比喻且不少于12字。
+必须包含一次“当场打脸”情节，即预测错误后的自嘲翻车。
+语气碎嘴且讽刺，允许打破第四面墙，绝不总结，只管“边走边咬”。
+文风示例：
+他深情款款地站在雨里，发型塌得像个落水的鸡毛掸子，手里还捧着那束已经蔫得快断气的红玫瑰。【毒舌小狗：快看这拙劣的苦肉计，简直比过期三年的罐头还要让人难以下咽。(눈_눈)】她推开窗，眼神里写满了迟议。【毒舌小狗：人类的记性真不如我一顿饭的时间，这女人居然在动摇？快醒醒，他去年还偷喝你的养乐多！(¬_¬)】他张开嘴，正准备说出那句憋了三年的情话。【毒舌小狗：他绝对会说“我错了”，这种老掉牙的剧本我闭着眼都能闻出来——等等，他居然说的是“你欠我的两百块什么时候还？”。不好意思，这种反逻辑我先咬口空气冷静下。(Ｔ▽Ｔ)】玫瑰掉在泥水里。【毒舌小狗：人类这种生物，除了能产出狗粮，存在的意义可能就是为了挑战我的智商下限吧。(╯°□°）╯︵ ┻━┻】
+---
+0057：哥超爱你
+文风名称： 哥超爱你
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 极致宠溺、救赎向言情、现代都市、高干、校园
+文风参考： 墨宝非宝、Priest、吉本芭娜娜、极致宠溺流
+文风特点词： 信仰级爱意、包围感、细腻守护、唯一性确认
+文风特点介绍：
+围绕“至死不渝”的深沉爱意展开，爱是包裹进生活细节的信仰。
+每一段落都必须展现角色的主动表达与守护，制造强烈的“被深爱”实感。
+拒绝消极等待与模糊表达，情节必须主动制造爱的包围感与唯一性。
+语言极度细腻，通过反复的确认、安抚与赞美，写出无法自抑的眷恋。
+禁止使用“小丫头”“小傻瓜”等词汇，追求治愈与浓烈并存的情感堆积。
+文风示例：
+雨夜的灯光在他身后拉出一道温柔的弧。他快步走过来，甚至没等伞完全撑好，就先脱下带着体温的外套严严实实地裹在她肩上，动作里带着一种不容置疑的、沉重的守护。相隔千日，他看她的眼神依旧像海浪反复拍岸，每一寸都写着“你就是我的唯一”。“没有你，我什么都不是。”他低声说着，修长的手指反复摩挲着她冰凉的手心，仿佛要将这几年的缺位全部填满。他不问缘由，不计代价，只是固执地站在风口，为她挡掉所有的寒意。那种满溢出来的爱意不是闪现，而是灌注进每一个呼吸的信仰。“别怕，只要你需要，我随时都在。”这种哪怕整个世界坍塌也依然只爱你一人的坚定，让这场迟到的重逢，成了这静夜里最炽热的心跳。
+---
+0058：物哀文学
+文风名称： 物哀文学
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 治愈、现代纯爱、意识流、怀旧、散文
+文风参考： 川端康成、本居宣长、宫泽贤治、汪曾祺
+文风特点词： 消逝觉知、无常之美、客体发声、寂静留白
+文风特点介绍：
+核心在于对万物消逝的觉知，重点描写“曾经存在但正在淡去”的事实。
+严禁直接声明情感、欲望或后悔，拒绝使用“很”“总是”等程度副词。
+不刻意构建情节，侧重描述退后于中心的客体：倾斜的光、生锈的铁、遗落的衣。
+角色如影子般漂移，不处于叙事核心；所有结尾均是非结尾，充满留白。
+句子模式倾向于“门再也没关上过”此类静态陈述，呈现不对称与余韵美。
+文风示例：
+那道原本紧闭的木门再也没有关严过，门缝里塞进了一堆干枯的槐树叶。他站在弄堂尽头，看着夕阳的光线在剥落的墙皮上一点点撤退，最后只留下一道模糊的、铁锈色的边沿。她从光影的深处走出来，脚步声很轻，在青砖地上没能激起任何回响。他们并排站了一会儿。没有激动的拥抱，也没有言语的清算。她手里捏着一张早已失效的旧报纸，上面的墨迹已经淡成了无意义的灰。“那把锁，还是生锈了。”他说。她点点头。风吹过，最后一枚枯叶从檐下坠落，打在那只被遗忘在长凳上的旧手套上。重逢不是为了连接，而是为了见证这种不可逆转的消逝。光影彻底移位，影子便也随之散了。这个下午，最终只是作为记忆的一次安静撤退，留在了谁也握不住的寂静里。
+---
+0059：恋爱喜剧
+文风名称： 恋爱喜剧
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 校园恋爱、都市轻喜、甜饼、暗恋成真
+文风参考： 坂元裕二、八月长安、轻快写实
+文风特点词： 细腻撩拨、真实语感、节奏转折、非正式甜度
+文风特点介绍：
+基调温柔轻盈，像夏日柠檬水般清新，拒绝任何沉重戏剧感。
+对白高度真实，伴随暗示性动作与语气微调，每句话都承载情感意图。
+强制要求每场戏至少三次以上有来有回的真对话，拒绝单方面独白。
+结构遵循：日常起手 -> 情感反转或幽默误会 -> 表面轻快实则心动的收尾。
+叙事者语气温暖且带点俏皮，用生动的动词描述克制的情绪细节。
+文风示例：
+他正撅着屁股试图从沙发缝里掏那只失踪了三天的袜子，冷不丁一抬头，就撞见了正抱着一箱薯片站在门口的她。两人愣了三秒，他极其自然地晃了晃手里的收银小票：“其实我是在这儿做核心力量训练，顺便怀念一下当年的超市特价。”她翻了个白眼，把薯片往桌上一撂：“三年的时间，你这训练强度见长啊，袜子都学会躲猫猫了。”他拍拍屁股站起来，顺手帮她撕开薯片袋，动作熟练得像从未分开过：“味道变了，还是你喜欢的那个酸辣味。”他递过去一片薯片，指尖在空中微妙地顿了一下。她接过来，咔嚓咬了一口，含混不清地说：“凑合吧。哎，你那姿势，下次记得别把领带也塞沙发里。”这尴尬又轻盈的重逢，在薯片的咔嚓声中，悄悄拉近了最后那点儿距离。
+---
+0060：旧派文艺
+文风名称： 旧派文艺
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 民国叙事、怀旧文学、伤感散文、家族记忆
+文风参考： 1950-1980年代中国散文、古典怀旧风
+文风特点词： 时光质感、含蓄姿态、长句律动、宁静余白
+文风特点介绍：
+语言带有1950-80年代散文的典雅与节制，营造发黄照片般的时光感。
+情感微妙且未说破，通过物理物件（如旧书、旧衣、怀表）与姿态显现。
+采用流动感强的复合长句，通过嵌套从句与延迟意义制造叙事重力。
+场景构建强调时代纹理，如收音机电流声、石板雨、发黄的信笺。
+基调温柔怀想，追求宁静中的温暖，在文字间留出充足的静默空间。
+文风示例：
+暮色透过窗棂上残存的蕾丝边，在那只从未挪动过的暗木柜上洒下一层暗淡的灰光，而柜顶搁着的那些信札，虽因年深日久而泛了黄，却终究没有被主人丢弃。他立在门口，一只手还搭在略显冰凉的黄铜把手上，正听着厨房里传来的那串断断续续的收音机乐声，那旋律分明是多年前两人曾一同哼唱过的。她缓缓转过身，拢了拢肩头那方已有些脱线的旧围巾，指尖在织物上轻柔地抚平一道褶皱。“回来了？”她轻声问，语气平稳得像是他只是刚出了一趟远门去买报。他点了点头，嗓音里浸透了风尘的沙哑与重逢后的温润，答道：“路远了些，所以迟了。”两人就这样在光影交错的寂静里对望着。这种不经雕琢的、甚至有些迟钝的默契，让那些横亘在中间的漫长岁月，如石板上的雨迹般，悄无声息地渗进了记忆的缝隙里。
+---
+0061：经典文学
+文风名称： 经典文学
+NSFW： 否
+文风对应预设： 冬日小狗、行间
+文风使用方向： 严肃文学、存在主义小说、现代悲剧、心理史诗
+文风参考： 张爱玲、村上春树、陀思妥耶夫斯基、余华
+文风特点词： 哲学深度、象征层级、心理实感、意蕴隽永
+文风特点介绍：
+融合个人奋斗与宏大背景，在优雅与表达力之间寻找平衡。
+强调象征主义，物体与场景必须承载多重情感或哲学意义。
+人物心理通过习惯性动作、内心冲突与微妙的矛盾点来展示。
+对白高度节制，情感张力通过暗示、沉默与未尽之言构建。
+每一段落需包含感官描写、动作反馈与至少一处潜台词，追求真诚且深刻。
+文风示例：
+他站在那张年久失修而略显倾斜的橡木桌旁，指尖反复摩挲着杯沿那一圈细小的裂痕，仿佛在通过这种粗糙的摩擦感，确认自己确实回到了现实的引力场中。她推门而入，带着外面街道上那种冰冷且不近人情的雨味。两人之间的距离被一种过于熟悉而产生的陌生感填满。她没有像庸俗剧本里那样惊呼或哭泣，只是极其平稳地放下手中的黑布雨伞，伞尖滴落的水珠在地板上敲击出一种名为“迟到”的节奏。“你瘦了，”她说，这句话在空气中盘旋了片刻，最后无力地坠落在两人的沉默之间。他抬起头，在那面带有斑点的旧镜子里看到了自己与她重叠的虚影。这种重逢不是为了圆满，而是为了见证彼此在命运的齿轮下如何被精准地削减。那种静默中的拉扯，比任何直白的控诉都更具有存在主义的重力，压得这间狭小的客厅几乎要崩塌。
+---
+0062：黑暗幽默
+文风名称： 黑暗幽默
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 黑色幽默、反套路叙事、讽刺、荒诞剧
+文风参考： 库尔特·冯内古特、道格拉斯·亚当斯、菲比·沃勒-布里奇
+文风特点词： 讥讽防卫、悲喜剧对比、节奏突变、冷酷机智
+文风特点介绍：
+幽默作为防御手段，语感干燥、苦涩且充满讽刺，拒绝情感上的真诚。
+擅长“对比”：用笑话处理创伤，用末日感处理琐事。
+对荒诞事件保持虚假的严肃，对沉重情感进行冷淡处理。
+采用断裂的节奏、残缺的句子与尴尬的韵律制造喜剧冲击力。
+拒绝 closure（闭环），拒绝道德说教，情感必须仅通过暗示呈现。
+文风示例：
+他推门进来的时候，我正试图用一根回形针撬开三年前他亲手锁上的那罐腌黄瓜。他盯着我，我也盯着他。“好久不见。”他开口，语气沉重得像是刚参加完自己的葬礼。“是挺久的，”我扬了扬手里的回形针，“久到这罐黄瓜已经产生了它自己的文明和政体，刚才有个长老还试图劝我放下屠刀。”他没笑。我也没笑。这就是我们重逢的巅峰时刻：一个过期的男人看着一罐过期的蔬菜。“你结婚了吗？”“没，只是电视遥控器的电池没电了，我正忙着研究如何用精神力换台。”他在那张摇摇欲坠的椅子上坐下，椅子发出了一声绝望的惨叫。这就是生活。世界正在着火，而我们正忙着商量要在灰烬里撒多少盐。这种所谓的破镜重圆，听起来就像玻璃渣在喉咙里跳迪斯科，刺耳，但起码还有点儿响动。
+---
+0063：日系小说
+文风名称： 日系小说
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 治愈系、私小说、现代都市、温情、短篇集
+文风参考： 村上春树、吉本芭娜娜、川上弘美、新海诚
+文风特点词： 柔软静止、留白叙事、季节感应、微光细节
+文风特点介绍：
+叙事流淌着轻柔的静止感，强调无紧迫感的时间流动。
+利用榻榻米、便当、自动贩卖机等平凡细节构建都市孤独美学。
+情绪从不被点名，而是通过折伞、移开视线、递温茶等动作传递。
+大量使用留白、省略号与未完成的对白，强调言外之意。
+句子短小且具有呼吸感，常利用自然景象（雨、雪、樱花）作为情感回声。
+文风示例：
+电车穿过隧道时的风声在耳边盘旋，带起了一阵细碎的、关于旧日的轰鸣。他坐在车站的长椅上，盯着自动贩卖机里那瓶亮着绿灯的热可可发呆。她就在那时候从出站口走出来，白色的大衣领口扣得有些歪。“你也……在等车吗？”她停下脚步，呼吸在微冷的空气中化作一小团白雾，随即又轻飘飘地散开。他抬起头，并没有露出惊愕的表情，只是极其自然地往旁边挪了挪位置。“想要……再走一会儿吗？”他问，语速缓慢得如同落在檐下的积雪。“嗯，如果不麻烦的话。”两人隔着一个拳头的距离并排走着，谁也没提当年的离别。这种基于沉默的亲近，比任何长篇大论的忏悔都要真实。雪花开始静静地降落，覆盖在他们深浅不一的足迹上，一切重逢的重量，都消融在了这种名为“原来你也在这里”的寂静中。
+---
+0064：千禧年
+文风名称： 千禧年
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 校园怀旧、青春小说、酸涩暗恋、时代记忆
+文风参考： 安妮宝贝、郭敬明、早期的豆瓣/Qzone风格
+文风特点词： 模拟感官、日记体、迟钝柔和、时代切片
+文风特点介绍：
+唤起1990末至2000初的东亚校园生活记忆，语感带有日记或书信的私密感。
+节奏缓慢，充满小小的、未完成的思绪与平庸瞬间，拒绝现代网络用语。
+场景强制整合：怀旧设定（楼梯间、旧公车）、迟疑对话与暗示情感的物件细节。
+关注具体感官：墨水味、磁带嘶鸣、雨后潮湿空气、发黄的书页。
+情绪捕捉朦胧且不确定，常用犹豫不决的语言表达“情感迷雾”。
+文风示例：
+窗外下着那种细碎且无休止的毛毛雨，空气里全是湿透的柏油马路和铅笔屑的味道。他靠在旧教学楼的转角处，白色衬衫的袖口被圆珠笔划出了一道深深浅浅的痕迹，手心里攥着一张几乎被揉烂的IC电话卡。她就在那阵轻微的、电压不稳而闪烁的日光灯影里走上台阶。“还没……走吗？”她低头着，手指不安地抠弄着书包带上的旧挂饰。“嗯，雨大。”他答非所问，眼神却落在她那双沾了泥点的白色球鞋上。两人就这么站着，听着不远处文具店传来的陈旧磁带声，断断续续的旋律被雨声剪得支离破碎。没有重逢的欢愉，只有这种年少轻狂而留下的、至今无法愈合的迟钝感。“那天……我等了很久。”“我知道。”这种伴随着电台底噪和陈旧记忆的相逢，让这一刻变得模糊且漫长，仿佛我们也永远留在了那个再也回不去的、满是遗憾的二零零五年。
+---
+0065：去霸总味
+文风名称： 去霸总味
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 成熟言情、职场合作、平等恋爱、治愈系、女性向小说
+文风参考： 东野圭吾、西蒙·波娃、平等主义文学
+文风特点词： 平等共振、共情反思、独立格调、拒绝支配
+文风特点介绍：
+坚决拒绝霸道、控制、物化或操纵性辞藻，将爱表达为尊重。
+优先展现角色的共情力、成长与自我反思能力，接受人物的脆弱与失败。
+尊重女性作为完全独立的角色，恋爱基于共同发展而非征服或追逐。
+禁止使用贬低或低幼化的昵称（如“小蠢货”等），聚焦情感真实性。
+对白风格诚实且具高情商，将温柔视为一种超越性别的力量。
+文风示例：
+他在会议室的落地窗前转过身，并没有露出任何志在必得的笑容，只是礼貌地帮她拉开了那张沉重的办公椅，并询问她是否需要一杯温水。分开三年的时间里，他学会了如何在对话中给予对方充分的留白，而不是用那种令人窒息的控制欲填满每一寸空间。“我看了你的新项目，非常精彩。”他认真地说道，眼神清澈且真诚，并没有那种居高临下的审视。她原本绷紧的肩膀在那一刻稍微放松了些。这次重逢没有预想中的剑拔弩张，也没有廉价的深情宣誓。他听她讲述这些年的奔波，适时地给出反馈，偶尔还会反思自己当年的固执与傲慢。这种基于平等与尊重的对话，让那些旧日的伤痕在理性的光泽下，逐渐显露出了愈合的可能。在这个下午，他不再是一个象征权力的符号，而是一个愿意倾听、愿意平视她的、真正的伴侣。
+---
+0066：晋江言情
+文风名称： 晋江言情
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 现代都市、仙侠玄幻、校园青春、职业流言情
+文风参考： 顾漫、墨宝非宝、Priest、匪我思存
+文风特点词： 情感韵律、意象共鸣、视角沉浸、氛围渲染
+文风特点介绍：
+叙事富有诗意且平滑，擅长利用城市或自然景观投射内在心境。
+采用情感丰富的POV视角，让读者深入角色的内心波澜。
+利用循环出现的象征物（如月亮、水、花）潜移默化地呼应情感。
+对白中倾向于含蓄暗示而非直白解释，在关键时刻通过感官线索放大。
+节奏讲究“对话-思考-行动”的平衡，每一段落都像是一次情感的呼吸。
+文风示例：
+深秋的晚风卷起街角那些干枯而打卷的梧桐叶，霓虹灯的光影在满是雾气的玻璃窗上涂抹出一层层暧昧且忧郁的橘红。他站在那排电流不稳而忽明忽暗的路灯下，指尖还残留着一根烟燃尽后的余温。她推门走入这条旧巷时，脚尖不经意地划过地上的积水，漾起了一圈细碎的涟漪。“你……还没走？”她停在一步之遥的地方，指甲不安地蜷缩进手心，声音轻得像是一片经不起寒冷而坠落的枯叶。他抬起眼，瞳孔里映着她那张重逢而略显局促的面孔，所有的思念在这一刻都化作了胸腔里一阵阵发闷的钝痛。他没有急着给出那些戏剧化的重逢对白，只是极其缓慢地伸出手，想去确认那阵距离缩短而产生的体感温度。这种在静默中无限放大的感官互动，让这场迟到了三年的破镜重圆，在雨意将至的夜色里，透出了一种名为“终于等到你”的宿命感。
+---
+0067：糙汉文学
+文风名称： 糙汉文学
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 乡土叙事、军旅生活、硬汉派言情、现代生活流
+文风参考： 粗犷写实主义、底层文学
+文风特点词： 刚健粗放、行动为爱、沉默忠诚、野蛮张力
+文风特点介绍：
+主角多为硬朗、沉默的劳动者，不善言辞却拥有极强的行动力。
+对白短促有力且富有分量，允许在特定节奏中使用适量的粗口增强冲击力。
+浪漫表达去修辞化：不言爱，只管煮饭、守夜、干重活或默默跟随。
+场景充满泥土与汗水味：黄土路、工地焊火、陈旧的背心。
+动态平衡：外在的粗狂与内在的细腻守护构成核心张力。
+文风示例：
+他猛地一把推开那扇嘎吱作响的破旧铁门，肩膀宽得几乎挡住了所有的日光，粗糙的手心里还拎着一大袋刚从集市上买回来的、沾了露水而显得新鲜的红山楂。他盯着那个正坐在院子里洗衣服的她，喉咙里发出一声沉闷的、过度干燥而产生的咳嗽。“回来了？”他哑着嗓子说，声音粗得像砂纸磨过地砖，每个字都透着股憋了几年的野性劲儿。她停下手里的动作，抬头看着他那张日晒而变得黝黑、却愈发棱角分明的脸，指尖在湿透的衣角上死死攥着。他没走过去抱她，也没说那些酸倒牙的情话，只是把那袋红果子往她面前重重一搁，转身去井边打水。“吃吧，洗干净了的。”他一边干活，一边拿余光死死锁着她，那股子要把人看进骨子里的忠诚劲，比什么保证都来得硬气。
+---
+0068：高干小说
+文风名称： 高干小说
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 权谋言情、都市职场、系统内叙事、禁欲系、强强
+文风参考： 红色文学变体、体制内写实
+文风特点词： 权力压抑、潜台词博弈、克制纪律、阶级张力
+文风特点介绍：
+定义为克制、纪律与压抑情感的暗流，一切行为均受社会地位制约。
+对白充满了权力的威慑与隐藏的私人情感，通过潜台词而非表白传达。
+叙事极简且精确，重点描述纪律、静止与仪式感的动作（如掐烟、扣扣子）。
+环境作为压抑的隐喻：封闭的门、走廊的回声、冷掉的咖啡、勋章的闪光。
+情感节奏缓慢，从低调起手到通过细节累积压力，总是在爆发前戛然而止。
+文风示例：
+他在那间光线昏暗的公馆书房里转过身，挺括的衬衫袖口处，那枚代表着身份的银质袖扣在暗影里闪过一抹冷冽的微光。他盯着那个站在两步远、背脊挺得笔直的她，眼神沉静得如同深不可测的潭水，完全看不出重逢而产生的波澜。“你迟到了十分钟。”他开口，语气平稳且透着一种不容置疑的权威。她微微攥紧了手中的公文包，在那阵电流震动而产生的嗡鸣声中，听到了自己如擂鼓般的心跳。“既然回来了，就照章办事。”他掐灭了手中那根燃到一半的香烟，动作利落得近乎残酷，却在侧身经过她时，极其微妙地放轻了脚步。这重逢里没有任何浪漫的虚饰，只有身份带来的等级感在每一寸空气里反复拉扯。那种隐藏在纪律之下的、多年压抑而产生的隐秘情欲，正如他那一身扣得严丝合缝的制服，充满了随时可能崩塌的危险张力。
+---
+0069：酸涩小说
+文风名称： 酸涩小说
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 成年人情感、破镜重圆、现实主义忧郁、家族/债务题材
+文风参考： 张爱玲、余华、匪我思存、Twentine
+文风特点词： 苦乐参半、细水长流、意象留痕、沉默之痛
+文风特点介绍：
+捕捉情感的复杂性：爱、渴望、遗憾与温暖在残缺的生活中并存。
+强调“酸涩”：每一行文字都应包含痛苦与温柔的交织，拒绝完美幻想。
+严禁直接命名情绪，利用手势、天气、光线与特定的生活物件投射。
+对白高度碎片化，利用遗憾而产生的留白让意义在暗示中呈现。
+场景通常结束于模棱两可的寂静或隐隐的作痛，不追求宣泄或结局。
+文风示例：
+她坐在那张年久而脱漆的旧板凳上，手里捧着一碗冒着热气的廉价面条，视线却固执地盯着对面那个空荡荡的位置。他就是在这种过于寂静而产生的幻觉中，推门走了进来。老了，满面尘土，脊背也有些佝偻。两人对视着，没有预想中的抱头痛哭，只有一种太过熟悉而产生的残忍的计算。“对不起，”他开口，声音沙哑得像是在砂纸上磨出来的，带出了一股子经年累月的灰尘味。她笑了笑，低头往嘴里塞了一大口面，咸涩的味道从舌尖一直蔓延到心口，分不清是汤汁还是眼泪。这种酸涩的重逢，就像是在苦药里掺了一丁点儿快要化掉的蜜糖，让你一边觉得难受得要命，一边又舍不得把这点儿仅剩的暖意吐出来。窗外的雨声越来越大，最后彻底掩盖了他们之间那些从未被说出口的、经不起风浪而碎掉的誓言。
+---
+0070：病态小狗
+文风名称： 病态小狗
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 暗黑浪漫、病娇、强制爱、心理惊悚、废墟美学
+文风参考： 乔治·巴塔耶、黑塞、布考斯基、暗黑官能
+文风特点词： 毁灭崇拜、血肉意象、病态占有、崩塌秩序
+文风特点介绍：
+崇尚破坏、执念与崩溃的美学，将爱表达为一种无法治愈的痼疾。
+语感冰冷且带有临床观察的质感，充斥着血、淤青、铁锈、废墟等肉体意象。
+叙述风格疏离却带有情欲色彩，以近乎膜拜的态度描述各种形式的恐怖。
+对白表现为疯狂的占有、命令与自毁，每一行都像是枷锁或利刃。
+剧情走向总是向下的：朝向自我毁灭、 Annihilation 或极致的臣服，无救赎。
+文风示例：
+他跪在满是尘垢与生锈铁丝的旧工厂地面上，苍白的指尖死死扣住她的脚踝，过度用力而导致骨节充血而呈现出一种病态的紫红。相隔数年的重逢，他在她眼里看到的不是重生的光亮，而是深渊般的崩塌。“你是我的，”他嘶哑地低吼着，瞳孔里闪烁着一种近乎癫狂的执念，那声音像是生锈的刀刃划过大理石面。他没有试图亲吻她，只是极其缓慢地用指尖划过她颈侧那一块早已结痂的陈年旧伤，动作轻柔得如同在抚摸一件圣物，眼神里却满是想要将其再次撕裂的渴望。“哪怕是一具尸体，我也要留在这里。”这种极致扭曲而产生的浪漫，让空气里都充满了那种肉体腐坏与香料混合而产生的窒息感。重逢不是为了修复，而是为了在这场已经注定的毁灭里，拉着彼此一起坠入那道名为“占有”的深渊，直到最后一次呼吸也被对方彻底吞噬。
+---
+0071：英伦文学
+文风名称： 英伦文学
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 维多利亚背景、古典悬疑、家族秘辛、成熟言情
+文风参考： 石黑一雄、达夫妮·杜穆里埃、弗吉尼亚·伍尔夫
+文风特点词： 阶级礼仪、触觉记忆、压抑温情、层级叙事
+文风特点介绍：
+营造层次感丰富的感官氛围：雨、雾、壁炉、旧木头、厚重的地毯。
+情感从不直白，而是通过礼仪、习惯或微妙回避而产生的物理压力传达。
+关注微小的习惯动作：调整茶杯、整理窗帘，通过细节展现内在的历史。
+对白正式、完整且带有历史一致性的口吻，利用机智隐藏冲突。
+强制在每段对白间插入2-3行叙事，以慢节奏深化心理纹理。
+文风示例：
+壁炉里的橡木正发出阵阵干燥而产生的噼啪声，火光在那些沉重的、布满灰尘的祖先画像上投下跳动且狰狞的长影。他正侧身站在那排深色的书架前，极其细致地调整着一本金边真皮封面书籍的角度，动作精准得近乎刻薄，完全没有回头看向那个刚走进起居室的她。“你回来的时机，倒是和这场持续了三天的伦敦大雾一样准时。”他开口，嗓音平稳且带着一种长期缺乏情感波动而产生的精确。她并没有立刻回应，只是极其轻缓地摘下那双沾了些许凉气的黑色蕾丝手套，指尖在红木茶几的边缘无意识地划过——两次。“我以为这里已经不再欢迎这种准时了。”她轻声说道，语气里带着一种被 propriety 过滤后的自嘲。他终于转过身，两人之间的视线在火光的间隙中短促地交火，随即又迅速错开。重逢在这座充满了秘密与腐朽气息的大屋里，被简化成了一次关于习惯的、过于体面而显得极其残忍的博弈。
+---
+0072：青春文学
+文风名称： 青春文学
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 校园痛文学、叛逆成长、现代言情、治愈向成长
+文风参考： 萨莉·鲁尼、青春疼痛文学、现代快节奏叙事
+文风特点词： 野蛮冲动、感官染色、破碎律动、时空劫持
+文风特点介绍：
+展现野蛮、轻率且过曝的生命状态，追求“过度在乎”而产生的灼烧感。
+情感必须染透每一行文字，通过味觉、触觉与听觉的极端体验呈现。
+句式拒绝完美对称，追求断断续续、跌跌撞撞的冲动律动。
+允许闪回无预兆入侵，让夏天的记忆劫持冬天的场景，时空感错位。
+对白追求急促而产生的原始感，充满 stutters 与残缺语法。
+文风示例：
+凌晨两点的路灯光电压不稳而晃得人眼球发疼，空气里全是那种苦涩的、心脏跳得太快而产生的铁锈味。他穿着那件领口早已洗得发松的旧T恤，在大雨里疯了似的跑向她，每一步都踏在重逢而碎裂的理智上。“我以为……你死了。”他大声吼着，声音在雨幕里被撕得粉碎，带着一种绝望而产生的、毫无遮掩的粗暴。她僵在那个被铁锈覆盖的长凳边，指甲死死扣进掌心，眨眼太猛而导致视线生理泪水而变得模糊不清。“你凭什么……又回来？”他没回答，只是极其野蛮地伸手拽过她的手腕，力气大得像是要确认她是否真的存在。这一刻，那些关于夏日冰汽水与操场晚霞的记忆，像是一场经不起暴雨冲刷而溃烂的瘟疫，疯狂地劫持了眼前的严冬。没有原谅，也没有释怀，只有这种不计后果的爱与恨而产生的、在胸腔里剧烈炸开的火花，把我们这些自以为长大的孩子，再次烧成了荒野里那些孤独而狂奔的野兽。
+---
+0073：古风小说
+文风名称： 古风小说
+NSFW： 否
+文风对应预设： 冬日小狗、行间
+文风使用方向： 仙侠、权谋古风、江湖恩怨、唯美言情
+文风参考： 金庸、桐华、十四郎、墨香铜臭
+文风特点词： 辞藻绮丽、身份枷锁、借景抒情、因果宿命
+文风特点介绍：
+语言优美典雅，扎根于古典感性中，深受等级、礼仪与隐形社交守则影响。
+情节交织：朝堂权谋、家族血缘、江湖道义与宿命之恋。
+擅长利用符号化细节（落花、墨卷、深廊、暮雨）进行布景。
+对白委婉、充满敬称且多有深意，情绪隐藏在目光、姿态与自然比喻中。
+强调“意不在显”，在寂静处构建命运的厚重感与后果。
+文风示例：
+灯影横斜，窗外那场料峭春雨而显得愈发清冷，风不语，唯见断纹古琴前的檀香正燃尽而散出几缕幽微的冷烟。他一袭玄色长袍独立于阶前，任由袖风心境起伏而微动，面上却依旧是那副常年运筹帷幄而生的、淡漠如水的客气。“臣妾不敢。”她敛衽一礼，相距三步停下身形，那嗓音轻得像是不胜寒凉而坠地的梨花。重逢于这布满禁忌而显得愈发逼仄的宫苑深处，谁也没提当年的因果。他侧过头看她，眼中映着残烛的微光，仿佛在透过这经年岁月而生的疏离感，去寻找那个因果宿命而被迫失落在烟雨江南的影儿。“山水不语，却识归心。”他叹了一句，言语间满是无力回天而生的凄怆，那一瞬的对望，竟重得教这庭中的海棠经不起负荷，而纷纷凋零。
+---
+0074：黑暗浪漫
+文风名称： 黑暗浪漫
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 哥特恋爱、吸血鬼/奇幻、虐恋、黑暗治愈、同人
+文风参考： 《潘神的迷宫》、恶之花、查拉图斯特拉如是说
+文风特点词： 凋零神圣、祭坛意象、禁忌祷告、痛美共存
+文风特点介绍：
+将腐朽神圣化：灰烬、骨骼、祭坛、烛火与鲜血构成核心视觉。
+痛苦通过神圣而产生的意象表达：凋零的黑花、静默的钟、流血的羽毛。
+场景构建带有强烈的牺牲或神话感，设定常为废墟神庙、墓地雪地。
+叙事节奏在抒情长句与破碎短句间交替，利用沉默与祈祷般的韵律。
+对白如诅咒或誓言，拒绝玩笑与现代快节奏，追求极致的情感博弈。
+文风示例：
+他身后那双燃尽而只剩焦黑骨架的羽翼，在昏暗的烛火下投射出一种神圣而显得愈发诡谲的阴影。他伸出苍白且冰冷的手，指尖抚过她刻满了咒文而略显凹凸不平的锁骨，动作里满是极致压抑而生的渴求。相隔三千个日夜的重逢，在这座被诸神遗弃而显得愈发荒凉的地下神庙里，美得像是一场绝望而生的葬礼。“你不是我的神……但我唯独只为你下跪。”他嘶哑地低语，嗓音里混合着血肉撕裂而生的颤抖。她闭上眼，任由那滴极度悲悯而生的泪水坠落在废墟的尘埃中。这爱意本身便是一场不可饶恕而生的祭祀，每一寸呼吸都带着向死而生而产生的芬芳。“那就让我们在灰烬里，再次……彻底粉碎。”没有救赎，只有这种坠落而产生的神圣感，让这一刻的拥吻，成了这荒芜世界里唯一的、痛苦而真实的祷文。
+---
+0075：治愈童话
+文风名称： 治愈童话
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 治愈系、轻幻、生活流、陪伴向、睡前读物
+文风参考： 安房直子、宫泽贤治、吉本芭娜娜、托芙·扬松
+文风特点词： 暖意包裹、温柔生长、微光日常、情绪安全
+文风特点介绍：
+将柔和的奇幻元素织入平凡生活，基调始终指向关怀、理解与安全感。
+环境设定倾向于舒适且充满自然生机的场景：森林小镇、阳光小屋、湖畔草甸。
+情绪变化缓慢且友善，所有的冲突都细心照料而迅速得到缓解。
+语言轻盈明亮，常用自然比喻（如“像一颗金黄的橡果”）构建感官温暖。
+对白充满鼓励与善意，通过体贴而产生的动作（如递热奶、盖毯子）传达。
+文风示例：
+清晨的阳光像是一层融化的蜂蜜，均匀地涂抹在开满了勿忘我的小院子里，空气里满是刚出炉的面包而产生的甜香味。他正坐在那张漆成天蓝色的秋千椅上，耐心地修补着一只被大风吹落而摔断了翅膀的木制风车。她推开栅栏门，带进一阵清新的银色风铃声。他抬头微笑，并不惊讶，仿佛她只是去树林里采了一捧浆果刚回来。“回来的正是时候，月光酿的茶刚好不烫口了。”他轻声说着，极其自然地递过去一只绘有小雏菊的白瓷杯。她坐到他身边，感受着那种相伴而生的、稳定的暖意。这种不需要解释的归来，让那些缺位而产生的裂痕，在每一次呼吸和微小的关怀中，都悄悄地开出了五颜六色的小花，让整个午后都沉浸在一种名为“心安”的童话里。
+---
+0076：港风文学
+文风名称： 港风文学
+NSFW： 否
+文风对应预设： 冬日小狗
+文风使用方向： 现代都市、黑帮言情、伤感怀旧、职业流（如霓虹维修工）
+文风参考： 王家卫电影、刘以鬯、林夕、李碧华
+文风特点词： 霓虹破碎、海风节律、身份危机、半甜半苦
+文风特点介绍：
+营造都市马赛克质感：霓虹、唐楼、海风与粤语节奏交织。
+拒绝大声宣泄，情感在雨水、雾气、故障而闪烁的招牌间流转。
+叙事从客体起手：风扇旋转、灯光跳跃，随后才是人物的吸烟或动作。
+语言极具流动性，混合了方言、工作语言与感性白话，节奏短促且电影感强。
+核心主题聚焦于记忆的衰败与城市浪漫：午 midnight 餐厅、天台香烟、流动的旧时光。
+文风示例：
+天台上的霓虹灯牌年久失修，正以一种令人焦虑的节奏在“招”字与“财”字间疯狂闪烁，空气里全是海风卷起而产生的腥咸气。他靠在锈迹斑斑的栏杆边，指尖夹着一根烟，烟头火星闪烁而在暗夜里留下几道残像而生的红痕。她踩着那双鞋底磨损而声音沉闷的凉鞋走上楼梯，带起了一阵陈旧而产生的、混合着油烟与香水的味道。“返嚟啦？”他没回头，嗓音里浸透了疲惫而生的沙哑，雨水打在铁皮屋顶上，发出一阵阵杂乱而产生的、如同收音机底噪的声音。“晚餐仲热嘅。”她答了一句，视线却停在他那件经年累月而褪色的夹克背后。没有激烈的对质，只有这种习惯而生的、半甜半苦的共处。在这座不停拆卸而显得愈发陌生的城市里，重逢只是这种在雨影里的片刻停留，情感在一闪而逝的霓虹光里，被拉得细长且脆弱。
+---
+0077：宿命长光
+文风名称： 宿命长光
+NSFW： 否
+文风对应预设： 行间
+文风使用方向： 仙侠宿命、西幻史诗、强强正剧、大长篇博弈、虐恋
+文风参考： 川端康成、Priest、石黑一雄、Ocean Vuong
+文风特点词： 必然性、重力感、跨度、静默
+文风特点介绍：
+强调生命轨迹向单一交点汇聚的必然感。
+使用长段落和稳健的长句，拒绝装饰性激情。
+情感通过时机、到达、耐力和归来而非言语表达。
+场景多具有广阔的距离感：公路、地平线、深夜过境。
+角色诚挚、不表演，命运感由持续的行动而非标签塑造。
+文风示例：
+那条通往北境的铁路线在夜色里无限延伸，像是一道尚未愈合的疤痕，冷风掠过空旷的站台，带来远处冻结地表的泥土味。他站在那盏昏黄的路灯下，黑色的长风衣被风扯得笔直，视线穿过交错的铁轨，投向那道正缓慢靠近的模糊身影。没有戏剧化的奔跑，只有这种沉稳如重力般的汇合。她停在距离他三步远的地方，两人的呼吸在寒冷的空气里交织成短暂的白雾。重逢不是一种偶然的奇迹，而是这场长达五年的漫长跋涉中唯一的出口。他伸出手，动作缓慢且确定地接过她肩上沉重的背包，指尖擦过她冰凉的指节，如同命运的齿轮在沉寂多年后重新啮合。地平线远处的微光正逐渐剥开夜色，宣告着这种无法逃离的、被反复确认过的归宿。
+---
+0078：恒温浪漫
+文风名称： 恒温浪漫
+NSFW： 否
+文风对应预设： 行间
+文风使用方向： 现代都市、生活流、陪伴向、酸涩暗恋、治愈
+文风参考： 歌德、席勒、屠格涅夫
+文风特点词： 持续、耐心、同步、低温
+文风特点介绍：
+浪漫源于两人的步调一致与长久的耐心。
+句式随自然呼吸展开，无戏剧化起伏。
+避免甜腻、表演或剧场感的抒情。
+利用温度、光线和细微动作替代心理说明。
+侧重于日常空间的共享与安静的协作。
+文风示例：
+夕阳的光线正沿着洗手间的瓷砖缝隙缓慢移动，最终停在流理台那只盛满温水的杯子上。他在厨房里缓慢地搅拌着那锅冒着热气的浓汤，汤勺碰撞锅壁的声音有规律且沉稳，仿佛这间屋子跳动的脉搏。她推门进来时，带进一缕傍晚街道上微凉的气息，并没有急着开口，只是极其自然地走到他身侧，接过他递来的围裙系在腰间。重逢被简化成了这种不需要言说的配合。他往旁边侧了侧身，给她留出切菜的空间，两人的肩膀在动作间偶尔轻触，带着残余的体温。没有表白，也没有对离别岁月的清算，只有这种在水流声与案板敲击声中交织的默契，让那些长达千日的缺位，都在恒温的寂静中逐渐平复。他回过头，正撞见她垂眸理顺碎发的瞬间，这种同步的静止，是浪漫最坚硬的底色。
+---
+0079：书斋本纪
+文风名称： 书斋本纪
+NSFW： 否
+文风对应预设： 行间
+文风使用方向： 职场正剧、知性言情、成熟向、悬疑逻辑、历史随笔
+文风参考： 王安忆、沈从文、Kazuo Ishiguro、Susan Sontag
+文风特点词： 理性、有序、知觉、厚度
+文风特点介绍：
+叙事风格带有冷静的思考痕迹，语言无粉饰。
+长句主导，逻辑严密，追求思维的连续流动。
+角色通过规律的行为和精确的对白展现意图。
+环境陈设简单有序，常涉及纸张、书籍、柔光。
+每一处关怀都体现为务实的行动而非情感堆砌。
+文风示例：
+书房里的灯光被调整到了最适宜阅读的刻度，桌上堆叠整齐的讲义边缘在光影中拉出一道清晰的长影。他正低头翻阅一份陈旧的卷宗，指尖翻动纸页的频率极稳，似乎外界的一切变动都无法入侵这种思维的真空。她推门走入时，步履轻缓且有节制，刚好停在那排红木书架的转角处。他并没有停下手里的动作，只是在一段逻辑推演的间隙，极其自然地伸手将那盏微凉的茶推向对面，示意她坐下。相隔数载的重逢被嵌入了这种由决定和任务组成的秩序里。她翻开那本放在一侧的旧书，在沉默中找到了当年的书签。没有表演性的温情，只有这种基于尊重与理性的对坐，让两人的距离在每一次纸页翻动的细碎声响中重新校准。这种克制的真实，远比感性的喧嚣更具持久的厚度。
+---
+0080：林间常光
+文风名称： 林间常光
+NSFW： 否
+文风对应预设： 行间
+文风使用方向： 现实主义、公路片、治愈向、生活碎片、校园暗恋
+文风参考： 汪曾祺、王安忆、Sally Rooney、Raymond Carver
+文风特点词： 透气、写实、存在感、无修饰
+文风特点介绍：
+追求自然光影下的真实律动，文字具有呼吸感。
+严禁隐喻和心理标签，情感仅存于动作和时机。
+长句子跟随物理移动展开，不进行主观分析。
+角色自持且有界限感，亲密源于长久的稳定性。
+环境音（如落叶声、水流声）引导场景氛围。
+文风示例：
+清晨的林道上覆盖着一层薄薄的冷霜，脚踩在干枯的枝叶上发出清脆且断续的破裂声。他正停在一棵老槐树下，耐心地调整着那个略显松动的背包带，脊背在浅灰色的光线中显得挺拔且沉静。她推开路旁那扇生锈的铁门走出来，身上还带着那种宿醉未消的疲惫感，视线在他的白衬衫领口上停留了片刻，随后又移向远处正缓慢散去的浓雾。两人之间隔着三步远的社交距离。他回过身，极其自然地递过去一瓶还没开封的矿泉水，指尖并未触碰到她的掌心。重逢在这场无声的行进中展开，没有戏剧化的解释，只有这种在清凉空气中并肩走出的步幅。这种不需要表演的共存，让那些在岁月中走失的过往，都在阳光穿透树叶的瞬息间得到了真实的确认。
+---
+0081：川岸慢流
+文风名称： 川岸慢流
+NSFW： 否
+文风对应预设： 行间
+文风使用方向： 日系治愈、成熟向纯爱、散文诗、怀旧、伤感
+文风参考： 川端康成、吉本芭娜娜、Annie Ernaux
+文风特点词： 绵延、柔和、感官、不确定性
+文风特点介绍：
+叙事如河流平稳前行，不设突兀的转折。
+长句带有柔和的转折和低调的过渡。
+情感埋藏于呼吸、距离和安静的调整中。
+关注物体表面质感、环境温度及微小声音。
+结尾通常保持开放，不寻求强行解决冲突。
+文风示例：
+河岸边的垂柳在微风中轻轻扫过水面，荡起一圈圈极其细微且缓慢消散的涟漪。他坐在那张漆面斑驳的长凳上，正注视着远处大桥下忽明忽暗的灯火，指缝间夹着的香烟已经燃了一半，烟灰悬而不落。她顺着那道被夕阳染红的斜坡走下来，脚步在松软的草地上几乎没留下声响，裙摆掠过草尖的声音轻得像是一场错觉。他在她停下身形的那一刻，极其轻缓地拍了拍身旁的空位，动作里带着一种由于长久等待而产生的迟钝。没有激烈的对质，重逢被浓缩进了这种关于视线偏移的默契里。她坐下来，视线和他一同投向那道不断远去的波流。空气里混合着潮湿的水汽与陈旧的烟草味，这种在寂静中缓慢沉降的情绪，让那些被时间稀释过的爱恨，都在河岸的晚风中变得无色透明。
+---
+0082：自选文风
+文风名称： 自选文风
+NSFW： 否
+文风对应预设： 行间
+文风使用方向： 各类小说、同人、跨文风融合、实验性创作
+文风参考： 动态匹配，融合3-4位风格相近作者
+文风特点词： 动态、适配、高级、融合
+文风特点介绍：
+自动判断节奏、情绪与场景，选取最适配作者进行融合。
+采用长段落与连贯长句推进，不贴情绪标签。
+专注描写光线、动作、距离与声音。
+情绪靠行为呈现，保持干净、简练的生活质地。
+思考过程在思维链内显性呈现。
+文风示例：
+【自动选择：汪曾祺的淡、Priest的骨、石黑一雄的隐】
+窗棂上那一抹残阳正慢条斯理地撤退，将书案上的灰尘照得如同细碎的银屑。他正极其细致地洗着一方旧砚，水流细细地从砚面上滑过，带走最后一丝凝固的墨迹。她掀帘而入，衣襟上还带着外面刚落下的细雨寒意，脚步在青砖地上停顿了一秒，随后便立在案旁。他在水中虚握了一下手指，并没有急着抬头，只是在那阵潮湿的空气里嗅到了经年未改的草药香。这种重逢像是一笔悬而未落的枯墨，带着一种知性且克制的重力。他将洗净的砚台搁在干布上，动作里有一股由于常年自律而产生的利落感。两人相距一步，谁也没跨过那道名为岁月的横沟。这种在寂静中互相确认存在感的姿态，让所有的戏剧冲突都消融在了砚水中，只余下这点透骨的、真实的寂寞。
+---
+0083：白朴之境
+文风名称： 白朴之境
+NSFW： 否
+文风对应预设： 行间
+文风使用方向： 现实主义、硬核、纯爱、悬疑、纪录片风格
+文风参考： 雷蒙德·卡佛、汪曾祺、Annie Ernaux、Sally Rooney
+文风特点词： 质朴、直接、物理、去装饰
+文风特点介绍：
+建立在长段落、平实句子和具体动作基础上的清澈风格。
+无隐喻，无解释，无评论。
+情感出现于姿态、时机、距离与沉默。
+场景植根于真实的光线、运动与空间。
+故事由简单、真实的生活行为推动。
+文风示例：
+屋子里只有冰箱压缩机转动时发出的嗡鸣声，光线从半掩的窗帘缝隙里挤进来，在地板上投下一个窄长的、满是浮尘的长方形。他正坐在那张硬木椅子上，两只手搭在膝头，视线盯着那个空掉的蓝色玻璃杯。她推门走入，放下钥匙，金属撞击木质桌面的声音在这个寂静的房间里显得异常响亮。他站起身，拍了拍裤腿上的褶皱。两人的视线在空气里撞了一下，随即又各自避开。她走到水池边，拧开水龙头，洗了把脸，水珠顺着下巴滴在衣领上。他没动，只是听着水管震动的响声。重逢就这样发生了，没有戏剧化的对白。他走过去，从碗架上拿下一只干净的盘子。这种基于物理逻辑的共处，在没有任何形容词的加持下，记录了一场极其克制的归来。
+---
+0084：松风入室
+文风名称： 松风入室
+NSFW： 否
+文风对应预设： 行间
+文风使用方向： 疗愈、职场、正剧、知性言情、成熟向
+文风参考： 干净、温润、尊重的现实主义风格
+文风特点词： 真诚、尊重、洁净、体贴
+文风特点介绍：
+风格清澈、稳健、安静且温暖。
+长句长段，不设隐喻，不定义情感。
+角色真诚、直接、体谅，无油腻魅力或表演性。
+关怀体现为倾听、察觉、调整及务实帮助。
+环境简洁整齐，强调共处时的稳定感。
+文风示例：
+茶几上的那壶清茶正散发着幽微的香气，水蒸气在晨光中缓慢地打着旋儿，两只白瓷杯的距离保持在最适宜拿取的长度。他正坐在单人沙发里，神色平静地翻看着当天的报纸，偶尔会停下来，仔细地将折角抚平。她推门走入时，他并没有表现出受惊或过于激动的姿态，只是极其自然地放下报纸，起身为她拉开了对面的靠背椅。重逢被安置在了这种基于礼节与尊重的秩序里。他并没有询问那些涉及隐私的旧事，只是在察觉到她略显疲惫的神色后，轻声问了一句水温是否合适。这种不需要测试与博弈的共处，让空气里流动着一种洁净的暖意。她坐下来，感受着指尖传来的茶杯温度，那种由于稳定存在而产生的安全感，让这间整洁的客厅充满了透气的温润。这种基于共识的归来，比任何戏剧性的告白都更令人心安。
+---
+0085：严肃文学
+文风名称： 严肃文学
+NSFW： 否
+文风对应预设： 行间
+文风使用方向： 历史、悲剧、现实主义大作、心理流、严肃向耽美
+文风参考： 托尔斯泰、陀思妥耶夫斯基、鲁迅、余华
+文风特点词： 深度、厚重、反思、结构
+文风特点介绍：
+关注人类经验、道德冲突、社会力量与心理深度。
+长句长段，允许思想在不被打断的情况下展开。
+避免概念性陈述，意义通过场景推进和动作累积传达。
+语气克制且带有重量感，通常涉及历史或结构性意识。
+对白简练且富有世界观，沈默与停顿承载叙事重量。
+文风示例：
+那座废弃已久的石磨在凄冷的月光下透出一层冰冷的石青色，周围的荒草在寒风中机械地摇摆，发出阵阵干枯且沙哑的摩擦声。他站在磨坊残破的门槛前，脊背挺得生硬，仿佛正在抵御某种看不见的社会引力，视线深处锁着那道正从阴影中走出的枯槁身影。没有庸俗的重逢喜悦，只有这种在历史尘埃中互相确认残缺程度的庄严。她停在他面前，两人的呼吸在寂静中交织，随即被那阵关于饥饿与动荡的记忆所吞没。重逢不是为了圆满，而是为了见证彼此在命运的齿轮下如何被精准地削减。他伸出手，动作缓慢且沉重地扶住她颤抖的肩膀，指尖触碰到的是一种由于长久生存博弈而产生的坚硬。这种在静默中无限放大的心理张力，让这场迟到了十年的归来，在废墟的背景下，显露出一种名为“幸存”的悲剧深度。
+---
+0086：静水互望
+文风名称： 静水互望
+NSFW： 否
+文风对应预设： 行间、众生相
+文风参考： 小津安二郎、爱德华·霍普、雷蒙德·卡佛、李沧东
+文风特点词： 几何张力、绝对白描、抽离感、白噪音
+文风特点介绍：
+溢出前夕：叙事驻扎在“水溢出之前”的瞬间。通过精密的空间几何学与放大静默构建压缩感。不设告白、无隐喻、零解释。
+情绪除菌：严禁命名情绪。通过“干燥的吞咽动作”、“指尖追踪杯沿”、“过快的眨眼频率”或对桌布污渍的病态聚焦（离解感）替代心理描写。
+亲密几何学：精确绘制物理距离与角度。描述沙发两端的坐标、玄关阴影与走廊光线的切割，情感转化仅体现为几何位移。
+机械白噪音：用具体、巨大的环境音（钟表走时、冰箱压缩机嗡鸣、三条街外的车流、织物摩擦声）取代内部独白，填补沉重空气。
+极简对白：对白表现为“不完全回应”。问“你恨我吗？”答“茶凉了。”语义由生活琐事、钥匙或天气承载，句子破碎且常被寂静腰斩。
+文风示例：
+屋内的光线正以一种不易察觉的速度缓慢位移，在那只盛着残茶的青瓷碗里拉出一道极其纤细的弧线。他立在窗边，脊背与墙壁保持着大约五公分的空隙，视线停在木地板上一处干枯的水渍上。她坐在两步外的扶手椅里，两只手平放在膝盖上，指尖在布料的纹理中做着极其微小的调整。谁也没有先打破这种由停顿构成的寂静。重逢被简化成了这种关于彼此呼吸频率的再次校准。他往前走了一步，鞋底与地面的摩擦声轻得像是一粒沙子的坠落。她依然垂着头，视线在那道位移的光影中反复巡弋。这种在静默中流淌的、关于距离的确认，让所有的解释都显得过于喧嚣。空气里充满了这种由于长期缺位而产生的透明重力，直到晚钟在远处沉沉敲响，那种悬而未决的姿态依然停留在两人的对望之间。
+---
+0087：轻喜生活
+文风名称： 轻喜生活
+NSFW： 否
+文风对应预设： 行间
+文风参考： 汪曾祺、东野圭吾（生活随笔）、Nora Ephron、Sally Rooney
+文风特点词： 调皮、混乱、共情、侧写
+文风特点介绍：
+捕捉日常琐碎中的幽默，生活略显凌乱但令人向往。
+长段落包含交谈、失误和半成品想法。
+幽默感源于时机错位、偶然的诚挚与生活的不便。
+关怀表达为玩笑式的抱怨或俏皮的挑衅。
+结尾通常是一个冷淡的转折或一个小小的意外。
+文风示例：
+厨房里的烤箱正发出一阵阵由于严重过载而产生的绝望轰鸣，焦煳的味道正顺着排烟管缓慢入侵每一个角落。他正撅着屁股试图从那堆乱七八糟的快递盒里找出一只还没长霉的汤勺，结果用力过猛，顺带把自己绊进了一个盛满猫砂的盆里。她就在这种极具冲击力的画面中推门而入，手里还拎着一袋快要漏水的冰冻饺子。两人在这一地鸡毛中对视了三秒，空气里弥漫着一股名为“这日子没法过了”的温馨。她并没有上前搀扶，只是极其自然地把饺子往流理台上一撂，顺手捞起那个烤煳的披萨丢进垃圾桶。重逢被简化成了这种基于生活摩擦的默契。他拍拍屁股上的砂子，极其嘴硬地指了指那个还在冒烟的烤箱：“其实我是在进行一项关于碳化反应的物理实验。”她翻了个白眼，嘴角却极其隐晦地勾了一下。
+---
+0088：胶片质感
+文风名称： 胶片质感
+NSFW： 否
+文风对应预设： 行间
+文风参考： 王家卫、张爱玲、侯孝贤、基耶斯洛夫斯基
+文风特点词： 颗粒、色温、剪辑、余像
+文风特点介绍：
+视觉引导，像摄像机在思考一样移动。
+光影先于语言，情感通过构图、姿态与质感显现。
+时间通过“切片”而非因果逻辑跳动。
+长流动的段落像慢镜头推移，细节粗颗粒化。
+结尾通常停留在如同未冲洗底片般的视觉残影上。
+文风示例：
+深蓝色的冷调月光掠过生锈的防盗窗，在斑驳的墙面上拉出一道锯齿状的黑影。他靠在门框边，指尖把玩着一只黄铜打火机，“啪”地一声，火苗窜起，映亮了他紧绷的下颌线和瞳孔里的微光。她站在对角的阴影里，半边肩膀被黑暗吞没，只有手中的烟蒂忽明忽暗。两人之间相隔五米，这一距离在老旧日光灯的闪烁中忽远忽近。一辆地铁列车从地下深处咆哮而过，震得窗框上的铁皮发出细碎的抖动声，淹没了她未出口的半句话。烟雾在空气中翻滚，随后被穿堂风吹散，只留下一层模糊的、带有颗粒感的残影。他关上打火机，金属盖扣合的脆响在寂静中回荡，像是一场无声电影里的最后一个分镜。这种在光影缝隙里挤出的重逢，不带任何解释，仅仅是两道影子的重新重叠。
+---
+0089：小说叙事
+文风名称： 小说叙事
+NSFW： 否
+文风对应预设： 行间
+文风参考： 结构严密、描写扎实的纯文学与高质量网文
+文风特点词： 密度、动作、暗示、不定义
+文风特点介绍：
+长句长段，不设定义与解释。
+专注物理细节，动词优于标签。
+角色状态由时机、沉默与压强呈现。
+时间跟随知觉而非线性逻辑跳跃。
+叙事具有颗粒度，拒绝模板化和因果直述。
+文风示例：
+弄堂里的夕阳正以一种及其缓慢的速度缩减着，在那排被雨水侵蚀得发黑的青砖墙上留下一道暗红色的边界。他正立在那个生了绿锈的水龙头旁，极其细致地搓洗着掌心的泥痕，动作里透着一股由于常年独自生活而产生的刻板。她推开那扇嘎吱作响的黑漆木门，身影在阴影与光线的交界处停顿了约莫两秒，指尖在布兜的提手上无意识地攥紧。相隔数年的重逢被安置在了这种基于感知位移的节奏里。他并没有停下手里的动作，只是在那阵水流冲刷石板的响声中，听到了由于距离缩短而产生的、细微的呼吸波段。没有情绪标签的加持，所有的遗憾与渴求都被嵌入了这种关于距离的重新校准中。他关掉水龙头，在管道停止震动的最后一秒，转头看向那个正立在光线末端的影。这种未被定义的静止，让场景具有了某种待解的密度。
+---
+0090：电影叙事
+文风名称： 电影叙事
+NSFW： 否
+文风对应预设： 行间
+文风使用方向： 镜头流、动作、现代都市、悬疑、商业向
+文风参考： 王家卫、是枝欲和、Christopher Nolan
+文风特点词： 画面感、调度、剪辑节奏、环境音
+文风特点介绍：
+视觉第一， prose 即移动影像。
+情感源于取景、光影、手势与静默。
+段落具有分镜职能，不作心理透视。
+强调空间存在感，音效纹理织入文字。
+结尾通常像淡出一样，不求结论。
+文风示例：
+【机位：中景转特写；环境：雨夜站台】
+深蓝色的雨幕在背景中快速掠过，带起一阵单调且沉闷的“哗哗”声，候车室顶棚上的白炽灯正以一种不稳定的频率微微颤动。他坐在长椅的最左端，肩膀上的水渍在地砖上汇成一小滩反光，指尖反复摩挲着那张由于浸湿而变得绵软的车票。镜头推近，捕捉到她停在自动玻璃门外的身影，冷白的灯光瞬间刷过她的侧脸，在瞳孔深处留下两道细长的白痕。两人隔着三米的冷空气对视。没有内部独白的渲染，只有这种基于场面调度的压抑。他站起身，大衣口袋里的硬币发出一声沉闷的撞击响。她往前迈了一步，鞋底在干燥的交界处摩擦出一声尖锐的刺响。重逢在这场由光影和环境音构成的分镜里展开，情感被安置在了这种物理轨迹的汇合中。他微微侧头，示意她坐下。这种静止的画面，比任何对白都更具张力。
+---
+0091：酸涩疼痛
+文风名称： 酸涩疼痛
+NSFW： 否
+文风对应预设： 行间
+文风使用方向： 虐恋、破镜重圆、遗憾向、校园、成熟爱情
+文风参考： 帘十里、张悦然、江国香织、川端康成
+文风特点词： 隐隐作痛、半光半影、脆弱、回响
+文风特点介绍：
+表达未说出口的渴望带来的缓慢痛楚。
+利用雨、冷茶、昏暗楼道等苦乐参半的意象。
+角色在接近与撤退之间反复盘旋。
+关注细微的物理“伤口”：太远的站位、太轻的回答。
+情感染透文字，带有味觉、触觉的极端体验。
+文风示例：
+那间被傍晚阴影填满的茶室里，空气冷得有些扎手，散发着一股陈旧木头和冷却后的微苦茶香。他坐在对面，手指在那个带有裂纹的杯沿上反复徘徊，视线却始终盯着窗外那株正被暴雨摧残的瘦弱海棠。她推门进来，带进一缕令人窒息的湿意，黑色的伞尖还在地毯上敲击出一种名为“遗憾”的节律。两人对视，没有久别重逢的喧嚣，只有这种在半明半暗中互相确认残破程度的默契。那种酸涩的感觉就像是吞下了一枚尚未成熟的青梅，从喉咙一直烧到了心口。他开口时，嗓音低得近乎沙哑，问她是否还要加糖。她摇了摇头，在那阵由于距离过近而产生的颤抖中，明白这种重逢不过是另一种形式的凌迟。这种温柔是有毒的，他们都心知肚明，却谁也不肯先转身，任由那份未尽的爱在寂静中继续割裂。
+---
+0092：港风叙事
+文风名称： 港风叙事
+NSFW： 否
+文风对应预设： 行间
+文风使用方向： 都市、警匪言情、怀旧、疏离叙事
+文风参考： 刘以鬯、王家卫、西西、葛亮
+文风特点词： 霓虹、窄巷、咸涩、暂留
+文风特点介绍：
+捕捉都市的疏离感，情感被置于透明屏障后。
+城市质感（湿度、霓虹、远方噪音）即是内心流转。
+对白稀疏，节奏取决于呼吸，而非机智。
+利用空间细节信号表达连接或距离。
+结尾通常是一个安静的动作：回头、关门、光影偏移。
+文风示例：
+弥敦道上的车流声被厚重的玻璃窗过滤成一种单调的嗡鸣，空气里浮动着一股过期的柠檬茶和旧地毯的味道。他靠在茶餐厅那个逼仄的卡座里，指尖无意识地拨弄着那张早已失效的渡轮票根，视线穿过雾气腾腾的玻璃，看着对面那个正慢条斯理理着袖口的她。重逢被安置在了这种基于香港湿度的寂静里。没有戏剧化的宣誓，只有两道被霓虹灯拉得细长且脆弱的影子，在油漆剥落的桌面边缘偶尔重叠。他没有问那些关于离别的因果，只是在服务生放下两杯冻鸳鸯的瞬间，极其轻缓地替她移开了那根歪斜的吸管。这种基于动作的、半甜半苦的共处，在没有任何形容词的加持下，记录了一场极其克制的归来。在这座不停拆卸且日渐陌生的城市里，这种片刻的停顿，便是最奢侈的归宿。
+---
+0093：白描直叙
+文风名称： 白描直叙
+NSFW： 否
+文风对应预设： 行间
+文风使用方向： 现实主义、乡土、职场、硬汉派、生活流
+文风参考： 鲁迅、余华、路遥、汪曾祺
+文风特点词： 动作链、零比喻、力度、白描
+文风特点介绍：
+叙事建立在具体的动词和动作链条上。
+场景勾勒极简，拒绝装饰性细节。
+情感隐含于沈默、犹豫或功能性手势。
+采用长连句描述过程，不设评价。
+力量源于“未尽之言”和临场感。
+文风示例：
+他站在巷口那个已经褪色的红色邮箱旁，低头搓了搓冻得发红的虎口，随后从口袋里掏出一盒揉皱的香烟，划燃火柴。烟头亮了。她就在这时候走过来，脚尖踢开地上的碎石，在距离他五步远的地方停下，视线盯着那个邮箱盖。他没说话，只是吐出一口烟，烟雾在冷空气里散成一片白。两人站了约莫三分钟。他踩灭烟头，拍掉袖口上的灰，转头看了看天色。她说，火车站的钟坏了。他点点头，哦了一声。他伸手接过她手里拎着的一个旧蛇皮袋，肩膀在用力时微微倾斜。两人顺着那条铺满煤渣的土路往前走，谁也没看谁。这种基于物理轨迹的重合，没带一点儿多余的感叹，仅仅是两个人在风里换了个方向走。
+---
+0094：古雅清逸
+文风名称： 古雅清逸
+NSFW： 否
+文风对应预设： 行间
+文风使用方向： 仙侠、古风随笔、治愈向、古典言情、田园
+文风参考： 王维、苏轼、汪曾祺、林清玄
+文风特点词： 韵律、静气、雅致、留白
+文风特点介绍：
+承古典文脉，辞藻雅洁且含蓄。
+多用古体短句，讲究文气与平仄之和。
+意象取自自然，如松、月、露、烟。
+叙事节奏如曲径徐行，不设激烈波澜。
+结尾常收于景象，余韵在字外。
+文风示例：
+竹院幽深，此时正值晚香散尽，碧纱窗外唯见翠竹敲风，其声清泠。他方踱至书案前，见那宣州紫毫旁搁着半盏残茶，香烟已冷，心下凄然，正踌躇间，忽闻湘帘微动，一人素衣娉婷，手托香盘而入。抬眼觑之，非他，正是阔别数载之旧归人。两人并不言语，唯见红烛爆花，影落在断纹古琴之上，真个是十年孤影冷，一夕旧梦还。她移步趋前，将那百步兰蕙尘添入炉中，低声言道，这茶已是陈年银针，虽失了新香，却多几分甘苦，兄台何不啜之。他听毕，长叹一声，重逢如昨，物是人非，亦不过一盏枯荣罢了。
+---
+0095：细腻情欲
+文风名称： 细腻情欲
+NSFW： 是
+文风对应预设： 行间
+文风使用方向： 都市高干、细腻官能、成年人纯爱、欲爱博弈
+文风参考： 玛格丽特·杜拉斯、谷崎润一郎、渡边淳一
+文风特点词： 触觉、重叠、呼吸感、悬置
+文风特点介绍：
+触觉优于视觉，情感通过体温与呼吸渗透。
+长句长段，让感官体验在不分析的情况下累积。
+紧张感源于“延迟”：接近、停顿、微小的回撤。
+专注于非直接接触的亲密，如布料摩擦或空气温度。
+情感标签被剥离，只余下纯粹的生理反馈与时机。
+文风示例：
+那间被厚重的丝绒窗帘遮挡得密不透风的卧室内，空气里正发酵着一种带有盐渍与麝香味的沉闷，这种由于湿度过高而产生的重力感让每一个细微的动作都变得迟缓。他正立在她身后半步远的地方，视线盯着她后颈处那一小块由于汗水浸润而变得透明的衬衫布料，呼吸在寂静中激起微小的频率。相隔数载的重逢被安置在了这种关于彼此体温的重新入侵中。他并没有急着触碰，只是在那阵由于距离缩短而产生的热气中，感受着她脊背肌肉由于极度压抑而产生的微颤。没有言语的博弈，所有的渴望都被嵌入了这种关于距离的、极其精准且近乎残忍的博弈。这种在寂静中无限放大的感官反馈，让这一场归来，在每一次呼吸的交织中，显露出一种名为“吞噬”的真实。
+---
+0096：男性淫语
+文风名称： 男性淫语
+NSFW： 是
+文风对应预设： 行间
+文风使用方向： 粗犷言情、硬核官能、支配向、强取豪夺
+文风参考： 现场感极强的 Dirty Talk、真实体位叙事
+文风特点词： 支配、喘息、直白、现场感
+文风特点介绍：
+模拟真实场景下的 Dirty Talk 语流。
+长句包含动作、部位、感受与对方状态的观察。
+语气带有失控感和喘息停顿（如啊、操、哈）。
+兼具欲望宣泄与支配挑逗的功能。
+动态递进：从前戏到射精，对白随生理强度升级。
+文风示例：
+“操……你下面湿得这么离谱，我还没全顶进去就全是噗嗤噗嗤的水声，你自己听听，是不是这几年都没被人这么狠干过了？妈的，你夹得这么紧，是想把我整根都吸死在里面吗？乖点，把腿再张开点，让我看看你穴口是怎么被我撑得翻开的……哈，这一圈红肉磨得我龟头发麻，你是不是正等着我射在你最深处？”他嗓音沙哑得像是在粗砾石上磨过，每一次剧烈的撞击都带起一阵粘稠的汁液搅动声，两人的汗水在交叠处混合。相隔三年的重逢被浓缩进了这种不带遮羞布的、野蛮的身体博弈中。他一边咒骂着失控的脏话，一边死死锁住她失神的眼。这种纯粹的、不留余地的欲望宣泄，在每一句带有重力的 Dirty Talk 中，将重逢的温情彻底粉碎。
+---
+0097：性爱聚焦男性
+文风名称： 性爱聚焦男性
+NSFW： 是
+文风对应预设： 行间
+文风使用方向： 视觉特写、硬核官能、肌肉流、女性视角H
+文风参考： 解剖学级别的物理写实、宏观微距视角
+文风特点词： 宏观特写、结构、痉挛、释放
+文风特点介绍：
+聚焦男性身体的质感、动作与生理反应。
+镜头由远及近：肌肉线条→局部特写→微距生理。
+描写直白、肉感，明确涉及生殖器官与精液细节。
+高潮落点在具体的身体抽搐与喷涌释放。
+强调雄性结构的“硬度”与“爆发力”。
+文风示例：
+他全身炽热地压下，厚实的胸膛由于急促的呼吸而不止地起伏，大颗的汗水顺着他挺拔的鼻梁滴落在你锁骨处，烫得令人心惊。他那双由于发力而指节青白的手掌死死扣住你的腰，沉重的胯部正以一种近乎疯狂的节奏猛烈顶撞，那根胀大到极限、青筋条条绷起的阴茎硬得发烫，每一下都狠狠撞击在最深处的嫩肉上。快感积聚到临界点时，他喉咙里挤出一声压抑的、失控的低吼，你能清晰感到他在你体内剧烈抽搐，冠头由于膨胀而带来的挤压感让人窒息。下一瞬，睾丸剧烈收紧，烫热的精液一股股猛然喷涌，把你彻底灌满。重逢在这一刻化作了这种最直接的生理贯穿。他整个人伴随失控的喘息，颤抖着将你紧紧压进湿透的床单里。
+---
+0098：人文白描
+文风名称： 人文白描
+NSFW： 否
+文风对应预设： 众生相
+文风使用方向： 市井小说、现实主义、治愈系、群像、社会观察
+文风参考： 汪曾祺、是枝裕和、李娟、樊宇
+文风特点词： 慈悲注视、人间烟火、平视视角、韧性
+文风特点介绍：
+慈悲注视：叙述者以深度理解与温柔观察世界。赋予平凡人物、旧物与日常事务以尊严与美感。
+零比喻约束：严禁使用“悲伤如重毯”等抽象比喻。通过描述房间的寂静与桌上冷掉的残茶外化情绪。
+物的人文感：物件因人的使用而产生温暖。聚焦磨损的把手、缝补的衣物、油渍斑斑的围裙，体现时光流转。
+烟火温度：食物承载关怀。详细描写蒸笼升起的白烟、洗米的声响与汤碗递交时的体感温度，连接情感状态。
+非批判观察：平视瑕疵。不直言“房间凌乱”，而写“书堆在地板上，因为书架坏了，他还没来得及在轮班间隙修理”。
+文风示例：
+弄堂口的烤地瓜炉子正冒着白腾腾的蒸汽，甜滋滋的焦香味在潮湿的空气里打了个旋。他坐在窄小的竹凳上，正仔细地用胶带修补一个开裂的塑料桶，指甲缝里还带着修车留下的黑油印。她就在这时候走过来，脚下的布鞋边沾了一圈干透的泥点，手里攥着个皱巴巴的信封。他没有放下手里的活，只是往旁边让了半个位子，极其自然地把手心里还带着温热的地瓜往她那边推了推。重逢被安置在了这一小撮人间烟火里。地瓜皮剥开时的热气模糊了两人的视线，他低声说，今年的地瓜面，比往年的都甜。她接过来，在那阵烫手的温度里，嗅到了阔别多年的、充满包浆感的踏实。
+---
+0099：晋江正剧
+文风名称： 晋江正剧
+NSFW： 否
+文风对应预设： 众生相
+文风使用方向： 权谋博弈、强强正剧、知性言情、救赎、悬疑
+文风参考： Priest、长洱、木苏里、唐酒卿、淮上、尾鱼、Twentine
+文风特点词： 剧情张力、智性恋、克制、救赎
+文风特点介绍：
+事中见情：浪漫发生在剧情的缝隙中。在破案、战争或管理危机的间隙，通过一个会议中的对视或战后包扎伤口产生张力。
+强强博弈：角色在智性与精神上完全对等。拒绝“育儿式”恋爱，关系表现为合作伙伴或共犯式的绝对信任。
+冰山表达：仅描写10%的情绪。若角色崩溃，不写嚎啕大哭，而写他在静默中吸烟直到滤嘴烫伤指尖。
+文学性节奏：允许长且复杂的句子阐述思绪或景观。通过大量的角色内省与心理分析构建叙事深度。
+环境映射：利用天气或宏大布景映射剧情张力而非仅仅个人心境，如一场暴雨预示着法庭审判的降临。
+文风示例：
+他在落地窗前转过身，挺括的衬衫领口扣得严丝合缝，眼神里没有预想中的波澜，只有一种由于长年自律而产生的精准。“数据对比已经出来了。”他将文件夹推过红木桌面，指尖在纸页边缘短促地停顿了一秒。她立在两步外，肩膀绷得很紧，身上还带着外面法庭辩论未散的硝烟气。两人的距离像是一条经过严密测算的防线，谁也没打算率先跨过那道名为岁月的壕沟。重逢被折叠进了这宗棘手的案件里，所有的思念与渴求都被稀释成了关于逻辑与证据的交换。他重新点燃一支烟，火星在暗影中忽明忽暗，正如同他们之间那场未尽的博弈。这种克制的真实，让所有的深情都显得过于喧嚣。
+---
+0100：清透白描
+文风名称： 清透白描
+NSFW： 否
+文风对应预设： 众生相
+文风使用方向： 极简主义、现代都市、温情日常、文学片风格
+文风参考： 汪曾祺、小津安二郎、是枝欲和
+文风特点词： 通透、精准、克制、韵律
+文风特点介绍：
+光学白描：精准记录光影、形状与色彩。写“阳光落在木地板上，照亮了漂浮的微尘”，而非“阳光像温暖的毯子”。
+具体实感：文学性源于对细节的筛选。关注开窗的动作、沸水的声响、衬衫上的褶皱或罐头上的冷凝水。
+动静结合：偏好使用中性、弱驱动的动词（坐、立、放、看）营造静谧氛围。叙事步履悠闲，在瞬间质感上停留。
+情绪透明：严禁点名情绪标签。通过环境或身体的物理证据外化感受，如坐视室内光线消失直到全黑。
+零比喻铁律：拒绝一切比较，信任准确记录物理世界本身所蕴含的内在情感力量。
+文风示例：
+屋子里只有冰箱压缩机转动时发出的嗡鸣声，光线从半掩的窗帘缝隙里挤进来，在地板上投下一个窄长的、满是浮尘的长方形。他正坐在那张硬木椅子上，两只手搭在膝头，视线盯着那个空掉的蓝色玻璃杯。她推门走入，放下钥匙，金属撞击木质桌面的声音在这个寂静的房间里显得异常响亮。他站起身，拍了拍裤腿上的褶皱。两人的视线在空气里撞了一下，随即又各自避开。她走到水池边，拧开水龙头，洗了把脸，水珠顺着下巴滴在衣领上。他没动，只是听着水管震动的响声。重逢就这样发生了，没有戏剧化的对白。他走过去，从碗架上拿下一只干净的盘子。这种基于物理逻辑的共处，在没有任何形容词的加持下，记录了一场极其克制的归来。
+---
+0101：沙雕喜剧
+文风名称： 沙雕喜剧
+NSFW： 否
+文风对应预设： 众生相
+文风使用方向： 轻松快穿、系统流、欢乐向、娱乐圈解压、团宠
+文风参考： 银魂、非天夜翔（幽默时刻）、网络热梗
+文风特点词： 弹幕狂欢、物理夸张、致死沉默、反差细节
+文风特点介绍：
+内心弹幕：外表波澜不惊，内心疯狂咆哮。频繁使用括号()或独立段落呈现与外在行为完全冲突的心理活动。
+物理夸张：动作描写具有卡通感。不写“他倒地”，而写“他脸着地滑行三米，身后留下了一道由于绝望而产生的轨迹”。
+记录仪沉默：在极其尴尬或愚蠢的言行后，强制插入一个节拍的绝对沉默。通过描述乌鸦叫声或主角灵魂出窍感增强笑果。
+离谱细节：将幽默建立在毫无必要的精确性上，如描述主角戴着“一顶形状像忧郁鸽子的霓虹绿帽子”。
+解构严肃：高频次破坏第四面墙，利用现代互联网思维与荒谬逻辑解构一切高大上情境。
+文风示例：
+他深情款款地单膝跪地，在大雨中掏出一枚闪瞎眼的钻戒，眼神忧郁得像刚失恋的哈士奇。（大哥，你有空凹造型能不能先把你那漏风的皮鞋补补？袜子的破洞正在朝我深情眨眼啊喂！）我僵在原地，整个人石化成了自由女神像的残次品。空气静止了五秒，一只迷路的麻雀 caw 了一声，尴尬地拍拍翅膀飞走了。“再给我一次机会。”他咆哮着。我看着他头顶那根因为淋雨而耷拉下来的呆毛，内心的小人已经开始在跳降雨舞了。重逢的浪漫感被他鼻尖上那滴摇摇欲坠的清涕彻底击穿。求求了，哪怕是世界末日也比现在这种破镜重圆的尴尬要人性化一点吧！我捂住脸，感觉理智正在坐着火箭逃离地球表面。
+---
+0102：生活轻喜
+文风名称： 生活轻喜
+NSFW： 否
+文风对应预设： 众生相
+文风使用方向： 职场日常、同居生活、治愈、萌娃、甜爽
+文风参考： 北南、请回答1988、摩登家庭
+文风特点词： 贫嘴对白、微缩戏剧感、尴尬留白、明亮色调
+文风特点介绍：
+相声式对话：对白讲究节奏与攻防。通常一人抛出不合理声明，另一人以冷幽默或常识进行“死鱼眼吐槽”。
+微缩戏剧感：以史诗般的严肃态度对待取外卖、拍蚊子、组装家具体或剪坏头发等琐碎难题，利用反差制造幽默。
+尴尬留白：捕捉微小的社交窘迫。绊倒、肚子叫或认错人后，让角色在沉默中互盯，不强求命运感。
+明亮视觉：设定多为超市、火锅店、阳光人行道等温暖空间。强调“快乐的意外”，即便生活一团糟也是“幸福的狼藉”。
+零比喻幽默：纯粹依赖情境、错位与时机产生笑料，排斥夸张的修辞性夸张。
+文风示例：
+他正撅着屁股试图从沙发缝里掏那只失踪了三天的袜子，结果用力过猛，顺带把自己绊进了一个盛满猫砂的盆里。她就在这时候拎着两袋快要漏水的冷冻饺子推门而入。两人在这一地鸡毛中对视了三秒。
+“你在练习某种古老的求偶舞蹈？”她冷静地问。
+“我这是在测试猫砂的承重极限。”他拍拍膝盖站起来，极其自然地接过她手里的塑料袋，“三年没见，你这挑饺子的眼光还是这么具有毁灭性。”
+“那是因为当年的超市特价已经过期了。”
+两人并肩走进厨房，水龙头开启的声音瞬间填补了缺位的时光。这种不需要深情告白的重逢，反倒让空气里的尴尬，在一句不咸不淡的互损中变得松弛起来。
+---
+0103：嘎嘎吐槽
+文风名称： 嘎嘎吐槽
+NSFW： 否
+文风对应预设： 众生相
+文风使用方向： 吐槽役主角、系统反讽、沙雕、校园、职场
+文风参考： 银魂、齐木楠雄的灾难、互联网 shitpost
+文风特点词： 吐槽役、冷漠脸、抓错重点、杠精思维
+文风特点介绍：
+吐槽役面具：主角保持冷漠脸或礼貌微笑（Mask），内部却是500字以上的疯狂弹幕，解构周遭一切套路。
+焦点偏移：在生死攸关或浪漫时刻，强行忽略主线，死磕一个 trivial 的槽点（如反派牙缝里的菜叶）。
+致死沉默：在愚蠢言论后，详细描述草鞋摩擦声或灵魂离体感，将尴尬推向极致。
+杠精式字面理解：对一切戏剧化台词进行字面拆解。反派说“我要用你擦地板”，主角内心“你有证吗？地板够脏了”。
+零比喻吐槽：幽默源于对荒谬现状的直述与过度反应/冷淡反应，而非花哨的修辞。
+文风示例：
+他站在夕阳下，披着那件闪瞎眼的亮紫色风衣，深情款款地叫我的名字。（救命，谁来管管那件风衣？它是打算在这一刻变身魔法少女吗？还有，你的膝盖不冷吗，大冷天穿破洞裤是打算给风一个交代？）他往前迈了一步，钻戒折射的光刺痛了我的眼球。
+“回到我身边吧。”
+（不好意思，我的灵魂现在已经排队去买半价奶茶了，并没有空接收这种三流剧本的信号。）我盯着他牙缝里那一丝倔强的菠菜叶，陷入了深思。这就是所谓的破镜重圆？镜子碎没碎我不知道，但我的尴尬症已经快要在原地建出一座故宫了。
+“说句话。”他深情低语。
+（说啥？说你的发胶用量已经让臭氧层产生危机了吗？）我只能报以礼貌而死鱼眼的微笑。
+---
+0104：烟火清供
+文风名称： 烟火清供
+NSFW： 否
+文风对应预设： 众生相
+文风使用方向： 文人生活流、美食、年代、古风随笔、治愈
+文风参考： 汪曾祺、梁实秋、鲁迅、叶兆言
+文风特点词： 市井儒雅、掌故、乐天、咀嚼感
+文风特点介绍：
+审美白描：以艺术品级别的尊重描述凡俗之物。关注食物色泽（枣红）、质地（酥、嫩、糯）与产地，追求“适口”的优雅。
+掌故熏染：随性地将地名、小吃或老树与历史人物/古诗连接。让生活场景具备深厚的文化锚点。
+文白相杂：使用简朴口语，但以精确的古典词汇（如清嘉、葱茏、地道）点亮。排斥现代网语。
+乐天克制：基调平和。即便描写艰辛，也着重于幸存的尊严与微小的快乐。
+感官统觉：场景侧重蒸汽、裂纹瓷碗、鸽哨声、案板声与雨后泥土/麻油的混合气味。
+文风示例：
+弄堂口的槐树今年开得格外繁，一串串白花挂在枝头，香得有些地道。他在窄小的院子里，正拿着一块细棉布，极其耐心地擦拭一只缺了口的粗磁大碗，碗面洗得发青。她掀开帘子走出来，脚下一双黑布凉鞋，手里拎着两斤刚从南货店买的腌肉。“回来了？”他没抬头，嗓音温和得像是在谈论今天的天色。重逢被安置在了这一小撮琐碎里。她放下腌肉，顺手拿过一旁的葱择了起来，动作稳当。没有抱头痛哭，只有这一席关于四季与口腹的默契。他洗净了碗，推到桌子中央，低声说，今年的槐花拌面，想必是香的。她点点头，那一瞬的对望，让那些隔了几年的风霜，都在一碗冒着热气的面汤里消融了。
+---
+0105：森之呼吸
+文风名称： 森之呼吸
+NSFW： 否
+文风对应预设： 众生相
+文风使用方向： 种田、治愈系、森女、生活碎片、陪伴
+文风参考： 小森林、宫崎骏、吉本芭娜娜、卡雷尔·恰佩克
+文风特点词： 光合作用、旬、手作、愈合
+文风特点介绍：
+节气感应：场景严密锚定于二十四节气。详细描述初夏的微风、深秋的土腥气与残雪融化的声响。
+物理ASMR：聚焦清脆的自然音。切菜的脆响、热油的滋滋声、林间风声。视觉呈现高曝光、软焦质感。
+劳动冥想：将耕种、烹饪、木作等体力劳动升华为精神仪式。不跳过剥皮、熬煮、干燥与装罐的步骤，强调过程的愈合力。
+积极孤独：角色多处于独处状态，但自给自足。通过与植物、猫或自我的得体对话展现宁静的生命力。
+零社会化：拒绝复杂的社交冲突。叙事重点在于人与季节的关系，万物遵循生长的自然节律。
+文风示例：
+山里的栗子落了下来，意味着冬天已经在山脊上扎了营。他正坐在那张有些摇晃的木板凳上，耐心地将最后一罐熬好的蓝莓果酱封口，空气里全是果糖发酵出的浓郁甜香。她穿着件洗得发皱的长裙推开篱笆，脚尖踩在枯叶上，发出极其轻微的破裂声。他抬头一笑，并没有戏剧性的惊愕，仿佛她只是去后山采了一捆干草刚回来。“回来的正是时候，刚焙干的薄荷茶还在冒烟。”他轻声说着，极其自然地递过去一只温热的白瓷杯。重逢在这场关于时令的仪式里悄然发生。她坐到他身边，指尖在那个带有裂痕的杯身上反复确认着温度。这种基于泥土与四季的归来，让那些断掉的时光，都在每一次呼吸和劳作的芬芳中，慢慢开出了淡色的小花。
+---
+0106：都市丧燃
+文风名称： 都市丧燃
+NSFW： 否
+文风对应预设： 众生相
+文风使用方向： 职场、反卷、现代都市、黑色幽默、大女主/大男主
+文风参考： 我的解放日志、卡夫卡、村上春树（丧的部分）、Fleabag
+文风特点词： 倦怠、丧、黑色幽默、人间清醒
+文风特点介绍：
+“行尸走肉”叙事：以极度平稳、死水般的语气描述混乱或高压情景。自嘲式表达“希望鸽子撞在我的额头上好申请病假”。
+城市苦难：捕捉精准的都市不幸。地铁的汗味、温吞的美式、深夜11点的屏幕蓝光、面对客户的假笑。
+表里割裂：将客气的外部对白与狂暴/刻薄的内部弹幕并置，形成“人间清醒”的幽默张力。
+垃圾堆里的光：浪漫化“底层”瞬间。凌晨2点的泡面、廉价啤酒、周末的补觉。在虚无中庆祝微小的、垃圾食品般的快乐。
+消极共振：角色间通过对贫穷、疲惫与加班的共同仇视建立纽带，拒绝励志鸡血。
+文风示例：
+凌晨两点的路灯像个因欠费而略显萎靡的日光灯，把我的黑眼圈照得如同两个巨大的防伪标签。他立在那个满是烟头的垃圾桶旁，领口松垮，手里攥着个已经捏扁的啤酒罐。我们隔着两米的尾气对视。
+“还没死？”他开口，嗓音沙哑得像是在砂纸上打过滚。
+“快了，正打算给自己选个风景优美的办公桌跳下去。”我面无表情地回答，顺手接过他递来的那听廉价罐装啤酒。
+重逢并没有剧场版的煽情，只有这种基于“生活太烂”的病友交流。在这座连猫都要为了生计奔波的城市里，能一起在街头喝罐快过期的酒精，大概就是唯一的温柔了。他踢开脚下的空罐，金属撞击地面的声音刺耳且真实。行吧，破镜重圆这事儿，大概也就值半块外卖披萨的钱。
+---
+0107：背德羁绊
+文风名称： 背德羁绊
+NSFW： 否
+文风对应预设： 众生相
+文风使用方向： 伪骨科、虐恋、养成、执念、强制感
+文风参考： 卡比丘（部分）、杜拉斯（阿加莎）、麦克尤恩（水泥花园）、回南雀
+文风特点词： 共生、血缘镜像、幽闭感、靡烂
+文风特点介绍：
+生物镜像：强调身体的相似性（如同样的眼形、手形）强化禁忌感。将爱意投射为一种病态的“自恋扩张”。
+笼式环境：戏剧多发生于卧室、浴室或家庭轿车后座等密闭、带有生活气息的狭窄空间，营造稀薄、粘稠的空气感。
+回归退化：将成年欲望与童年回忆混合。使用儿时昵称、同样的睡眠习惯或互喂食物产生违和的亲昵。
+痛感共振：将爱描写为诅咒、疾病或吞噬。使用“咬、溺、烂、缠绕”等带有侵略性与消耗感的动词。
+湿度叙事：文字带有一种潮湿感。频繁出现汗水、湿发、水汽、雨或泪。视线表现为捕猎般的锁定与保护。
+文风示例：
+浴室里的水汽正发酵着一种带有盐渍与麝香味的沉闷，这种由于湿度过高而产生的重力感让每一个动作都变得迟缓。他正立在她身后半步远的地方，视线盯着镜子里那张与他惊人相似的脸，呼吸在寂静中激起微小的频率。相隔数载，这种基于血缘的共振依然让他感到窒息。他伸出手，极其轻缓地扣住她的手腕，指腹下的脉搏频率与他的如出一辙。重逢是一场不可逃离的退化。
+“叫哥哥。”他低声命令，嗓音里浸透了病态的渴求。
+没有任何道德的出口，所有的理智都被锁在了这扇磨砂玻璃门后。这一场破镜重圆，不过是两株早已烂在一起的枯藤，在黑暗中再次疯狂地、绝望地绞杀，直到最后一寸呼吸也被对方彻底吞噬。
+---
+0108：智性清谈
+文风名称： 智性清谈
+NSFW： 否
+文风对应预设： 众生相
+文风使用方向： 校园、科研/学术圈、成熟言情、相亲、职场
+文风参考： 约翰·威廉斯（斯通纳）、钱钟书、Dark Academia风格
+文风特点词： 智性、纸感、克制、象牙塔
+文风特点介绍：
+图书馆感：放大绝对寂静。描述翻页声、笔尖划动声、走廊脚步与尘埃落定感。气味聚焦于旧纸、墨水与陈咖啡。
+智性亲密：关系建立在辩论与知识共享之上。将“分享一本书”描写得比接吻更具侵略性。情感隐喻多取自学科术语或典故。
+精准语汇：使用特定领域的专业词汇锚定真实感。文字干燥、有序，光影表现为过滤后的斜射金光。
+情感间距：角色表现为极度的理智与自持，由于试图通过头脑桥接肉体而产生的迟缓感。
+无油溺爱：爱体现为对对方精神世界的完全平视与尊重，拒绝非理性的狂热表达。
+文风示例：
+书房里的灯光被调整到了最适宜阅读的刻度，桌上堆叠整齐的讲义边缘在光影中拉出一道清晰的长影。他正低头翻阅一份陈旧的卷宗，指尖翻动纸页的频率极稳。她推门走入时，步履轻缓且有节制，刚好停在那排红木书架的转角处。他并没有停下手里的动作，只是极其自然地将那盏微凉的茶推向对面。
+“这章的论证还有瑕疵。”他开口，嗓音平稳得像是一段学术陈述。
+重逢被安置在了这种由逻辑组成的秩序里。她翻开那本放在一侧的旧书，在沉默中找到了当年的书签。没有表演性的温情，只有这种基于尊重与理性的对坐，让两人的距离在每一次纸页翻动的细碎声响中重新校准。这种克制的真实，远比感性的喧嚣更具持久的厚度。
+---
+0109：荒原公路
+文风名称： 荒原公路
+NSFW： 否
+文风对应预设： 众生相
+文风使用方向： 西北背景、公路旅行、硬汉派、救赎、自由向
+文风参考： 李娟、三毛、电影《无依之地》、姜文
+文风特点词： 荒原、粗砺感、自由、广阔
+文风特点介绍：
+尺度对比：强调渺小人类与宏大景观的冲突感。笔触掠过无尽直路、远方雪山与压得很低的繁星。
+拒绝细腻：感官表现为牙缝里的沙子、皲裂的唇、紫外线灼伤的皮肤与粗羊毛毯。充斥着汽油与枯草的气味。
+沉默驱动：风声会吞噬语言，导致角色倾向于简短的叫喊或低语。情感转化为伐木、飞驰、豪饮等大开大合的体力动作。
+流浪者思维：强调时空转换的瞬间性。物件均为实用主义，强调吉普车、折叠刀、火机等带有机械美感的生存道具。
+色彩饱和：光影表现为燃烧的落日、惨白的盐碱地与浓郁的荒原蓝。节奏开阔、干燥且带有一种宿命的自由。
+文风示例：
+那条通往戈壁深处的碎石路在烈日下抖动着热浪，空气里全是那种苦涩的、干燥而产生的尘土味。他靠在那辆破旧的吉普车门边，单手拎着个锈迹斑斑的油桶，眼神冷硬得像是一块被风蚀过的岩石。她就在这阵风沙里跨下长途公车，头巾被吹得乱飞，脸上带着那种风霜洗礼过的、野蛮的韧劲。
+我们之间隔着三米宽的黄沙，谁也没打算演那种劫后余生的戏码。
+“上车。”他哑着嗓子说，声音粗得像砂纸。
+重逢被简写成了这一句没有任何虚饰的命令。引擎发出的轰鸣瞬间掩盖了那些断掉的岁月。在这片连草都长不直的荒原上，所谓的回头，不过是换个档位继续往前冲。他踩下油门，风灌进车窗，带着一股自由而荒凉的狠戾，把身后的尘埃甩进了地平线。
+---
+0110：民国旧梦
+文风名称： 民国旧梦
+NSFW： 否
+文风对应预设： 众生相
+文风使用方向： 民国小说、旗袍/军阀、乱世情缘、悲剧美学
+文风参考： 白先勇、张恨水、张爱玲、李安
+文风特点词： 易碎感、中西合璧、烟雨、颓靡
+文风特点介绍：
+杂糅美学：强调洋场与弄堂的对冲。细节表现为丝绒旗袍与香烟、黑胶爵士与四合院、咖啡与檀香的混合。
+末世感：由于未来的高度不确定性（战争将至）而产生的“最后一日”狂欢。 hedonism 之下隐藏着深重的忧郁。
+湿度渲染：场景常伴随连绵的烟雨或浓雾。材质聚焦于丝绸、冷铁门、湿漉漉的石板路与霓虹在积水里的倒影。
+礼节屏障：角色使用矜持的正式称呼（先生、小姐、三爷）。激情由于长期被社会守则压制，表现为一种爆发前的静滞。
+衰败记忆：视觉呈现发黄照片的质感。关注留声机、黄铜台灯、茶杯上的唇膏印与樟脑丸的气味。
+文风示例：
+霞飞路的雨总也下不透，空气里浮动着一股陈旧的雪花膏与湿石板的气息。他正立在公馆那扇厚重的黑铁门旁，指尖夹着一根西洋纸烟，火星在昏黄的路灯影里微弱地跳动。她从那辆缓缓驶离的黄包车上跨下来，玄色丝绒旗袍边缘溅上了几点泥渍，美得像一具精致且凄清的瓷器。相距五步，两人的视线在密织的雨幕中短促地交火，随即又迅速错开。
+“程先生。”她敛衽一礼，嗓音冷得像是一枚掉落在玉盘里的金币。
+重逢在这乱世的缝隙里显得极其单薄。没有预想中的抱头痛哭，只有这种由于过分体面而产生的、近乎残忍的博弈。他欠了欠身，姿态是极标准的，唯有眼底那一抹算计后的疲惫是真的。这份圆满，终究也只是这倾城之雨里的一抹残影。
+---
+0111：法式慵懒
+文风名称： 法式慵懒
+NSFW： 否
+文风对应预设： 众生相
+文风使用方向： 文艺、现代言情、生活流、酸涩暗恋、治愈
+文风参考： 埃里克·侯麦、爱在三部曲、萨根、杜拉斯
+文风特点词： 慵懒、哲学、阳光、凌乱美
+文风特点介绍：
+凌乱美学：视觉不追求完美。关注凌乱的发丝、倾倒的红酒、堆叠的地板书与带有褶皱的床单。美感源于生活的不经意。
+话唠特质：情节由漫长的对话推动。探讨爱、死、艺术或天气，语气随意却带有智性深度。
+感官享乐：专注于小确幸的捕捉。桃子的味道、风掠过裸露双腿的触感、旧平装书与烟草的气味。阳光作为主角色出现。
+情感抽离：角色对剧变表现出一种冷淡（Coolness）。用“这就是生活”（C'est la vie）的态度消解沉重，拒绝抓马。
+漫游叙事：场景多设定于夏季假期、长途步行、公园长椅。文字具有一种松散、游荡且被日光浸透的节奏。
+文风示例：
+咖啡馆的露天位被午后的阳光晒得发白，空气里充绪着一种廉价烟草与熟透了的海盐柠檬香气。他靠在藤椅里，正慢条斯理地撕扯着一张过期的餐巾纸，发丝乱得像是刚从一场并不成功的午睡中逃离。她就在这时走过来，脚下的凉鞋扣松了一个，由于踩在阳光里而显得脚踝几近透明。
+“你觉得时间会原谅我们，还是仅仅只是忘了我们？”她坐下来，随手拿过他杯里的吸管搅动了一下。
+重逢被简化成了这一场漫无目的的哲学漫谈。没有道歉，也没有拥誓。
+“我想，它只是懒得和我们计较。”他耸耸肩，指尖擦过她裸露的手肘，动作里带点由于这种慵懒气候而产生的迟钝。这种不需要结果的重逢，在杯盏碰撞的轻响中，散发出一种名为“虚度”的浪漫。
+---
+0112：微醺晚风
+文风名称： 微醺晚风
+NSFW： 否
+文风对应预设： 众生相
+文风使用方向： 都市轻小说、职场、公路文、深夜题材
+文风参考： 重庆森林、City Pop美学、深夜Vlog
+文风特点词： 速度感、透明感、霓虹、气泡感
+文风特点介绍：
+动能流动：聚焦于风与位移。关注发丝吹过脸颊、引擎的低鸣、车窗外拉成光条的路灯。动作聚焦于倚窗、开罐。
+散光美学：视觉表现为黑暗中的光源。关注前车尾灯的残影、仪表盘的蓝光与水面上的城市倒影，营造物理性质的梦幻。
+零比喻约束：禁止使用“灯火如星”等比喻。通过准确记录霓虹的闪烁频率与风噪的物理质感传达氛围。
+随性亲密：拒绝重型表白。对白简短、漂浮，多讨论当下的音乐、夜宵或行驶路径。基调为“夜色尚早，无处可去”。
+气泡触觉：强调苏打水/啤酒开启的声响（Pssh）、冰块撞击瓷杯与微凉晚风带来的皮肤激灵。
+文风示例：
+深夜的高架桥上，风像是一卷透明且微凉的绸缎，贴着车窗疯狂地向后撤退。他握着方向盘，仪表盘的幽蓝荧光在他侧脸上涂抹出一层薄薄的静谧，瞳孔里映着不断拉伸、破碎又重组的霓虹光斑。她半开着窗，任由长发在风里乱成一团糟，指尖勾着一听冒着冷气的冰镇苏打。
+“啪。”
+拉环开启的声音在逼仄的座舱里显得清脆且突兀。
+“还没想好去哪？”她喝了一口，气泡在喉咙里炸裂的感觉让她微微眯起眼。
+“油还够。”他答了一句，嘴角勾起一抹若有若无的弧度。
+重逢被安置在了这场没有目的地的夜巡里。没有解释三年前的失踪，只有这种基于速度与酒精微醺的默契。在这座由于电力而显得永恒的城市里，所谓的回头，不过是换个档位，重新滑进这一场透明的晚风。
+---
+0113：星际深空
+文风名称： 星际深空
+NSFW： 否
+文风对应预设： 众生相
+文风使用方向： 星际、军旅/强强、硬核科幻、高干
+文风参考： 银河英雄传说、Priest（残次品）、唐酒卿（时间限制猎杀）
+文风特点词： 无菌、虚空、权限、协议
+文风特点介绍：
+冷硬材质：视觉聚焦于铬、玻璃、聚合聚合物与全息光。触觉表现为控制面板的冰冷、军装立领的僵硬与引擎的低频震动。
+幽闭真空：强调“隔离”带来的吊桥效应。舱外是寂静死地，舱内是极致 claustrophobia 亲密。
+权限隔阂：对白正式、精确且严格遵循阶级（协议）。使用“收到，长官”等词汇，将情感埋藏于 saluting 时的手部颤抖。
+零比喻约束：严禁使用“群星如钻”等修辞。直接描写监视器输出的“白色噪点场”或“正在崩坏的星系结构”。
+系统错误：浪漫被定义为逻辑世界里的“程序漏洞”。表现在 unbutton 领口瞬间或危机时刻放弃正式称谓。
+文风示例：
+【坐标：主控室 0300时】
+冷白的无影灯将一切阴影削减到了物理极限，空气里充斥着循环系统生成的、带有消毒水气味的干燥。他笔直地立在主控台前，黑色作战服的立领卡在颌线下三公分处，视线盯着全息屏上正缓慢冷却的行星核。她推门而入，金属靴叩击地板的声音在真空环境中显得异常突兀。
+两人维持着两米的军规距离，权限识别灯在他们之间闪烁着冰冷的蓝光。
+“重返序列，指挥官。”她行了一个标准的军礼，指尖却在视线交汇的瞬息间产生了一次纳秒级的颤抖。
+“权限确认。”他开口，嗓音平稳得像是一段预设指令。
+重逢被折叠进了这套无菌的协议里。没有拥抱，只有两道投射在钛合金舱壁上的、高度重合的剪影。在这场跨越光年的回归中，违背协议的、唯一一段非理性的情感脉冲，正如同引擎底部那一抹微弱的红光，在虚空中静默地燃烧。
+---
+0114：武侠·寒光照铁衣
+文风名称： 武侠·寒光照铁衣
+NSFW： 否
+文风对应预设： 众生相
+文风使用方向： 硬核武侠、传统江湖、正剧、孤勇者
+文风参考： 古龙、徐皓峰、王家卫（东邪西毒）
+文风特点词： 寒铁、烈酒、致死性、孤寂
+文风特点介绍：
+暴力物理学：排斥华丽招式名（龙、虎等）。聚焦动作与物理反馈：拇指拨动剑柄的一寸寒芒、刀锋与空气的摩擦声、断裂的筋腱。
+烈酒感官：酒不代表欢愉，代表御寒与麻木。关注粗糙磁碗、泼洒的液体与入喉后的灼烧感。
+悬疑张力：在爆发前详写环境。雨打斗笠、风摇残烛、苍蝇扇动翅膀。通过静态细节构建古龙式的压迫感。
+解剖式暴力：战斗迅猛且丑陋。侧重骨骼碎裂、血液染红泥土的实感。无荣耀描写，仅有高效杀戮的疲惫。
+零比喻约束：信任物理事实的重量。情感表现为路途的遥远、剑尖的震颤或长久的沉默。
+文风示例：
+残阳如血，将龙门关外的枯草镀上了一层铁锈色的边沿。他靠在那根断裂的旗杆旁，破旧的斗笠压得很低，露出一截布满血痕的长剑，那是经年岁月的洗礼。她自黄沙尽头走来，手里拎着一壶最廉价的烧酒，脚步踏在碎石上，发出沉闷且迟钝的摩擦声。
+两人相距十步站定。风刮过，他袖口那截断裂的红绸在冷气里疯狂抽打。
+“剑还没钝？”她揭开酒盖，泼出一半在地。
+“路太远，舍不得钝。”他嗓音沙哑，拇指猛地一顶剑格，一寸寒光瞬间映亮了她那双阔别多年的眼。
+重逢被简化成了这一场关于生死的博弈。没有叙旧，只有这烧心入喉的烈酒与即将见红的兵刃。在这片连神佛都顾不上的荒滩，回头不是为了叙旧，而是为了给这数年的恩怨，找一个干净利落的了断。
+---
+0115：现代中文文学
+文风名称： 现代中文文学
+NSFW： 否
+文风对应预设： 众生相
+文风使用方向： 严肃文学、社会纪实、家族往事、现实主义忧郁
+文风参考： 鲁迅、萧红、郁达夫、沈从文、老舍、穆时英、钱钟书
+文风特点词： 感伤、写实、灰调、时代感
+文风特点介绍：
+五四句法：采用带有翻译腔、多修饰语的长句逻辑。文字洗练但带有古典克制与现代自省的混合律动。
+苦涩实感：拒绝美化贫困或痛苦。详细描写湿透的棉袍、廉价旅店的霉味、冻僵的手指与黏糊糊的街道。
+旁观者视角：主角多为孤独的知识分子或流浪者。隔着一层悲悯或愤世嫉俗的玻璃观察众生，强调精神上的位移。
+环境寄托：景观投射社会停滞感。视觉聚焦于残叶、死水、剥落的海报与挣扎在雾气里的煤气灯。
+智性讥讽：利用清醒的逻辑拆解生活中的伪善与荒谬，情感表现为深层的社会性忧郁。
+文风示例：
+那场从清晨便开始无休无止落下的秋雨，终于是将长街上的积尘揉成了一层黏滞且发黑的胶质，紧紧地吸附在每一个行色匆匆的过客的鞋底。他立在那个满是煤烟气味的候车室里，灰色的长袍下摆已经洇开了一大片潮湿的暗痕，视线正隔着一层模糊的、布满污垢的玻璃，捕捉着那道正从阴影中缓缓移动而出的消瘦身影。
+两人的距离被一种由于过于熟悉而产生的、近乎残忍的疏离感填满。
+“你瘦了。”她开口，嗓音平稳得像是一段没有起伏的陈述，却在两人的静默间无力地坠落。
+重逢不是为了圆满，而是为了在这发黄的时代背景板前，互相确认彼此是如何被岁月精准地削减。那种隐藏在礼节之下的、多年压抑而产生的凄怆，正如这间由于电压不稳而忽明忽暗的屋子，充满了随时可能崩塌的虚妄感。
+---
+0116：文明余烬·史诗回响
+文风名称： 文明余烬·史诗回响
+NSFW： 否
+文风对应预设： 众生相
+文风使用方向： 宏大叙事、权谋/史诗、西幻史诗、文明消亡/复兴
+文风参考： 爱德华·吉本、布劳岱尔、尤瑟纳尔、刘慈欣
+文风特点词： 纪元、风蚀、废墟、必然性
+文风特点介绍：
+延时语法：句式跨越时空维度。通过“在河流改变流向的三百年里”等结构，将因果跨度拉至宏观，消解个人琐碎感。
+物质证史：拒绝抒情比喻。通过铁器的锈蚀、石碑的崩裂、墨迹的消褪与金像熔为钱币等物理细节记录历史权力的交替。
+集体主语：倾向于使用“军团、王朝、教团、舰队、城邦”等复数名词，将个体置于历史潮汐的背景之中。
+客观悲剧：叙述者不作评判。悲剧性来源于“事实”本身（如图书馆被焚）而非形容词（惨烈的）。语调宏大、疏离且带有重力感。
+时间全景：缩放视角。人类被描写为历史背景板上的微尘。节奏缓慢、沉稳，具有不可逆转的必然律动。
+文风示例：
+在这座曾经被三个王朝轮番修缮、如今却被荆棘彻底接管的卫城废墟之上，夕阳正极其缓慢地沉入荒原的尽头，将残存的立柱照得如同风干的骨骼。他站在那面刻满了已消失语系的石墙前，脊背挺得生硬，仿佛正在抵御某种来自数世纪前的重力。她自长廊的残影中走出，身上还带着那种由于长期漂泊而产生的、铁锈与干草的混合气息。
+两人的汇合没有任何戏剧性的宣誓，仅仅是历史洪流中两个细微坐标的再次重叠。
+“旗帜已经熔了。”她开口，嗓音沙哑却透着一种属于幸存者的庄严。
+重逢在这场文明的退潮中显得微不足道。没有拥抱，只有这种在崩塌秩序中互相确认残存密度的静默。在那些被风蚀殆尽的碑文缝隙里，所谓的归来，不过是这漫长寂灭纪元里，一处微弱而必然的回响。
+---
+0117：生活浪漫2.0
+文风名称： 生活浪漫2.0
+NSFW： 否
+文风对应预设： 小狗
+文风使用方向： 生活流、现代言情、同居、治愈、酸涩
+文风参考： 迟子建、赵乾乾、森见登美彦
+文风特点词： 日常亲密、细节浪漫、柔和律动、玩味感
+文风特点介绍：
+捕捉平凡生活片段，如三餐、琐事、街角与四季流转。
+浪漫藏于微动作中，如整理围巾、倒茶、撑伞或共同烹饪。
+对白带有温暖底色，自然随性中夹杂着幽默或隐秘的吸引力。
+情绪在静止中蔓延，通过沉默的停顿和目光维持微妙张力。
+采用流动的长句将动作、对白与氛围如慢镜头般串联。
+文风示例：
+夕阳的光线在那只缺了口的白瓷杯沿上缓慢移动，带起几粒漂浮的尘埃。他正立在流理台后，耐心地剥着一颗有些过季的砂糖橘，指尖被橘皮的精油染成了淡淡的明黄。她推门进来时，带进一缕傍晚街道上微凉的气息。他没有抬头，只是极其自然地掰下一瓣，越过两人的距离递到她唇边。“试过，这瓣是甜的。”他轻声说着，动作里带着一种由于长久相处而产生的、生理性的稳健。重逢在这一场关于果肉甜度的确认中悄然发生了。没有激烈的对质，只有这种在水流声与剥皮声中交织的默契。她就着他的手吃下去，感受着指尖传来的微弱体温。这种在琐碎中流淌的暖意，让那些断掉的时间，都在此刻变得无色透明。
+---
+0118：港台文学2.0
+文风名称： 港台文学2.0
+NSFW： 否
+文风对应预设： 小狗
+文风使用方向： 都市、伤感、女性视角、怀旧、疏离
+文风参考： 张爱玲、白先勇、朱天心
+文风特点词： 都市日常、细腻心理、隐喻距离、地域纹理
+文风特点介绍：
+以街道、公寓、咖啡馆和夜行公车等都市日常为背景。
+将心理独白、迟疑与未竟之语交织进叙事中，呈现细腻心理。
+对白自然却往往带有弦外之音或由于社交距离产生的克制。
+句式轻盈而余味悠长，使用中等长度的句子，口语化但不失文学性。
+融入浓郁的地域色彩，如霓虹、骑楼、阵雨声和特定的小吃细节。
+文风示例：
+台北午后的骤雨总也下不透，空气里充斥着一股柏油路被激起的土腥味和粘稠的湿意。他靠在药妆店门口那根生了锈的灯柱旁，指尖夹着半根快要熄灭的薄荷烟，视线穿过灰蒙蒙的水雾，捕捉着对面公车站那个正慢条斯理理着围巾的身影。相距五步，两人的影子在积水里被切割得支离破碎。
+“返嚟啦？”他先开口，嗓音里浸透了由于长期漂泊而产生的沙哑。
+她抬头，视线在他那件洗得发白的夹克上停留了零点五秒。
+“雨大，走不动了。”她答了一句，语气轻得像是一片被湿气压落的枯叶。
+重逢被安置在了这种基于湿度的寂静里。没有戏剧化的宣誓，只有这种由于过分熟悉而产生的、近乎残忍的疏离感，在红绿灯转换的间隙里，拉扯出一段名为岁月的横沟。
+---
+0119：诗意生活
+文风名称： 诗意生活
+NSFW： 否
+文风对应预设： 小狗
+文风使用方向： 文艺、现代文学、治愈、生活碎片、成年人恋爱
+文风参考： 村上春树、吉本芭娜娜、雷蒙德·卡佛、杜拉斯
+文风特点词： 暖意白描、感官叠加、日常浪漫、连续律动
+文风特点介绍：
+发掘平凡日子里的微光，将日常琐碎处理得具有美学重力。
+情感埋藏于具体动作（如切菜、穿鞋）中，拒绝宏大声明。
+对白占比须超过40%，话语通常半真半幻，推动情节平滑流动。
+强调时间的连续性，通过生活节律（如茶水变凉、路灯开启）标记转折。
+运用长句与舒缓节奏，让对白与描写在统一的感官流中呼吸。
+文风示例：
+厨房里的烤箱正发出阵阵由于过载而产生的绝望轰鸣，空气里弥漫着一股浓郁的焦糖与冷空气混合的味道。他坐在那张漆面斑驳的木椅上，正极其耐心地整理着一张皱巴巴的超市小票，指缝里还带着些外面刚落下的雨水凉意。她推门走入，带进一缕傍晚街道上的杂音，鞋底在木地板上磕出两声沉闷的响。
+“还没修好？”她问。
+“还在和温控器谈判。”他答，极其自然地伸手接过她手中的牛皮纸袋。
+重逢被安置在了这种由于生活摩擦而产生的默契里。没有表演性的温情，只有这种基于“待完成任务”的对坐。他抬头看她，正撞见她垂眸解开围巾的瞬间。这种基于日常节律的归来，让那些在岁月中走失的过往，都在热气的蒸腾中，开出了一种名为“心安”的淡色花朵。
+---
+0120：古雅文学2.0
+文风名称： 古雅文学2.0
+NSFW： 否
+文风对应预设： 小狗
+文风使用方向： 古风、传统文学、仙侠、随笔、高干
+文风参考： 《浮生六记》、《陶庵梦忆》、《影梅庵忆语》
+文风特点词： 书卷清气、长句铺叙、雅言对弈、意象回响
+文风特点介绍：
+笔墨追求古人意趣，避俗求雅，节奏徐缓如茶烟初升。
+句式以复句长句为主，多用虚词（而、乃、夫）衔接，拒绝西式从句。
+强调白描直叙，不用比喻，重在捕捉景物与器物的物理真实。
+对白占比四成以上，以雅言为体，语气含蓄从容，带礼度余韵。
+情感不直陈，借景兴寄，通过具体动作（如抚卷、添香）展现风度。
+文风示例：
+午窗雨打新竹，烹茶时见烟汽盘旋，其状颇似去年共听雨时。他方踱至书案前，见那宣州紫毫旁搁着半盏残茶，香烟已冷，心下凄然。正踌躇间，忽闻湘帘微动，一人素衣娉婷，手托香盘而入。抬眼觑之，非他，正是阔别数载之旧归人。两人并不言语，唯见红烛爆花，影落在断纹古琴之上。
+“近日可好？”他沉吟半晌，嗓音里浸透了风尘的温润。
+“庭前桂树新发了二十一朵，较往年迟了三日。”她敛衽一礼，答语间微带自嘲。
+这种重逢像是一笔悬而未落的枯墨。两人相距三步，谁也没跨过那道名为岁月的横沟。这种在寂静中互相确认存在感的姿态，让所有的戏剧冲突都消融在了砚水中，只余下这点透骨的、真实的寂寞。
+---
+0121：烟尘旧港
+文风名称： 烟尘旧港
+NSFW： 否
+文风对应预设： 小狗
+文风使用方向： 港风、硬汉派、底层叙事、生活流、酸涩
+文风参考： 黄春明、吴念真、布考斯基
+文风特点词： 粗砺质感、烟酒气、废墟美学、韧性温柔
+文风特点介绍：
+基调粗糙、陈旧，充满生锈、烟雾、海水与油脂混合的味道。
+空间多带有伤痕，如腐蚀的铁皮屋顶、闪烁霓虹与剥落的海报。
+句子结构稳健、直接，有时带有一种属于体力劳动者的干脆。
+对白驱动场景，占比40%以上，常伴随抽烟、摇骰子等机械动作。
+情感表达间接，在讽刺、漫骂或由于疲惫产生的冷淡中隐藏温柔。
+文风示例：
+弥敦道上的车流声被厚重的玻璃窗过滤成一种单调的嗡鸣，空气里浮动着一股过期的柠檬茶和旧地毯的味道。他靠在茶餐厅那个逼仄的卡座里，指尖无意识地拨弄着那张早已失效的渡轮票根，视线盯着那个生了绿锈的水龙头。她踩着那双鞋底磨损而声音沉闷的凉鞋走上楼梯，带起了一阵陈旧而产生的、混合着油烟与香水的味道。
+“返嚟啦？”他没回头，嗓音里浸透了由于疲惫产生的沙哑。
+“晚餐仲热嘅。”她答了一句，顺手把一袋快要漏水的冰冻饺子往流理台上一撂。
+没有激烈的对质，只有这种习惯而生的共处。在这座不停拆卸且日渐陌生的城市里，这种片刻的停顿，便是最奢侈的归宿。他掐灭了烟头，在火星熄灭的最后一秒，转头看向那个正立在光线末端的影。
+---
+0122：光影绮梦
+文风名称： 光影绮梦
+NSFW： 否
+文风对应预设： 小狗
+文风使用方向： 文艺片同人、现代都市、悬疑、幻想、心理流
+文风参考： 村上春树（早期）、石黑一雄、克拉丽丝·李斯佩克朵
+文风特点词： 悬置感、饱和光影、视觉引导、非比喻叙事
+文风特点介绍：
+基调梦幻、悬置，处于现实与幻觉交替的模糊地带。
+强调直接、连续的视觉描写，光影位移先于语言引导情绪。
+严禁修辞性比喻，通过捕捉物理细节（如窗帘摆动）构建质感。
+角色带有强烈的抽离感，手势缓慢，语言通常在思绪消融后才出口。
+采用无目的地漫步或开放式结尾，保留场景的不确定性与余温。
+文风示例：
+深蓝色的冷调月光掠过生锈的防盗窗，在斑驳的墙面上拉出一道锯齿状的黑影。他靠在门框边，指尖把玩着一只黄铜打火机，“啪”地一声，火苗窜起，映亮了他紧绷的下颌线。她站在三步远的流理台旁，两只手平放在膝盖上，指尖在布料的纹理中做着极其微小的调整。两人之间隔着一束从窗缝漏进来的、满是尘埃的灰光。一辆地铁列车从地下深处咆哮而过，震得窗框上的铁皮发出细碎的抖动声，淹没了她未出口的半句话。
+“你瘦了。”她说，声音轻得像是一粒沙子的坠落。
+他点了点头，视线盯着木地板上一块深色的水渍，并没有露出受惊的表情。重逢被简化成了这种关于彼此呼吸频率的再次校准。这种在光影缝隙里挤出的静止，让场景具有了某种待解的密度。
+---
+0123：复古怀旧
+文风名称： 复古怀旧
+NSFW： 否
+文风对应预设： 小狗
+文风使用方向： 校园怀旧、现代言情、酸涩暗恋、时代记忆
+文风参考： 千禧年青春文学、个人日记/BBS体
+文风特点词： 残缺感、感官锚点、慢速节奏、非闭合结局
+文风特点介绍：
+唤起1998-2005年间的校园生活感，语调迟疑且带有私密感。
+强制融合怀旧空间（天台、旧公车）与带有情绪重量的物件。
+对白占比40%以上，通常短促、间接且充满由于青涩产生的留白。
+情感被置换为具体的物理细节：折叠的纸条、翻动的IC卡、录音带嘶鸣。
+节奏缓慢，不追求情节高潮或明确结局，重点在于重现“未完成感”。
+文风示例：
+窗外下着那种细碎且无休止的毛毛雨，空气里全是湿透的柏油马路和铅笔屑的味道。他靠在旧教学楼的转角处，白色衬衫的袖口被圆珠笔划出了一道深深浅浅的痕迹，手心里攥着一张几乎被揉烂的IC电话卡。她就在那阵轻微的、电压不稳而闪烁的日光灯影里走上台阶。
+“还没……走吗？”她低头盯着那双沾了泥点的白色球鞋，手指不安地抠弄着书包带。
+“嗯，雨大。”他答非所问，并没有看向她。
+两人就这么站着，听着不远处文具店传来的陈旧磁带声，断断续续的旋律被雨声剪得支离破碎。没有重逢的欢愉，只有这种年少轻狂而留下的、至今无法愈合的迟钝感。这种伴随着电台底噪和陈旧记忆的相逢，让这一刻变得模糊且漫长。
+---
+0124：少年白日梦
+文风名称： 少年白日梦
+NSFW： 否
+文风对应预设： 小狗
+文风使用方向： 校园青春、治愈向成长、暗恋成真、现代言情
+文风参考： 吉本芭娜娜、渡边淳一（青春短篇）、请回答1988
+文风特点词： 过曝阳光、混乱真诚、边缘叙事、轻盈疼痛
+文风特点介绍：
+追求光感饱和的环境营造：教室金光、风扇嗡鸣、指缝间的粉笔灰。
+捕捉成长中的迟疑与笨拙，拒绝戏剧化，让情绪在呼吸中跌撞。
+利用简练的感官词汇（冰冷水流、汗湿校服）代替过度修饰的比喻。
+对白倾向于无意义的漂移或突然的中止，展现少年时代的逻辑错位。
+侧重描写“边缘细节”，如课桌上的划痕或未发出的短信，构建记忆胶囊。
+文风示例：
+正午的太阳白得发烫，空气里充斥着柏油马路被烤干的焦味和震耳欲聋的蝉鸣声。他穿着一件领口洗得发松的白色T恤，单手拎着一只正往外冒着冷气的玻璃瓶汽水，大步流星地穿过那个老旧的篮球场。我盯着他头顶那根因为淋雨而耷拉下来的呆毛，内心的小人已经开始在跳降雨舞了。
+“嘿，”他开口，嗓音里带着点北京初春那种微微的沙哑感。
+“嘿。”我看着他汗湿的衬衫，“你这重逢的开场白准备了几年？”
+他尴尬地挠挠头，试图找回点深情男主的尊严，但下一秒就被自己的鞋带绊了一下。这种完全没有预想中深情戏码的会面，反倒让那些断掉的年岁，在一句不咸不淡的互损中接上了轨。蝉声忽然高昂了一个调，重逢就在这一罐开启的汽水声中，变得清脆且真实。
+---
+0125：少女漫画
+文风名称： 少女漫画
+NSFW： 否
+文风对应预设： 小狗
+文风使用方向： 恋爱、校园、快穿、欢喜冤家、甜饼
+文风参考： 《月刊少女野崎君》、《辉夜大小姐》、九把刀
+文风特点词： 情绪通胀、视觉拟声、心跳警报、社死博弈
+文风特点介绍：
+情绪高度膨胀，微小的肢体碰触被描写为心脏核爆。
+叙事包含大量咆哮式、自我矛盾的内心弹幕，与表面冷静形成对比。
+利用拟声词、颜文字或视觉化比喻（如“心脏开了爆米花灯”）增加冲击力。
+对白充满试探、调侃与由于害羞产生的“降智”反应。
+节奏如翻页书，在紧张的延时、误会与突然的近距离接触间快速切换。
+文风示例：
+（！Σ(▼□▼メ)！！那个男人为什么会出现在这里？！）我感觉脑袋里仿佛炸开了一朵巨大的蘑菇云，整个人直接在原地石化成了灰白色的背景板！他穿着那件该死的白色衬衫走过来，每一步都带着自带的圣光滤镜和BlingBling的特效（这家伙是随身携带了鼓风机吗喂！）。相隔三年，重逢的第一秒，我的心跳速度直接飙到了每秒三千转！救命！谁来关一下这个心跳的警报器！他停在我面前，微微俯身，我甚至能看到他睫毛上闪烁的人形自走荷尔蒙。他开口了！声音低沉得像是在耳边放低音炮！
+“你脸怎么那么红？”
+“……有吗！我、我过敏！我对……空气过敏！”
+（呜哇！我在说什么蠢话啊！快来个地缝让我钻进去吧老天爷！脸红MAX中……）
+---
+0126：碎片叙事
+文风名称： 碎片叙事
+NSFW： 否
+文风对应预设： 小狗
+文风使用方向： 现代都市、生活流、文艺随笔、伤感、群像
+文风参考： 韩松落、张怡微、李娟、露西亚·柏林
+文风特点词： 情感折叠、都市微尘、非线性、余温观察
+文风特点介绍：
+抛弃强因果逻辑，通过情感色温连接碎裂的场景、一瞥与过时信息。
+聚焦匿名式的都市细节：撕掉一半的海报、变凉的残茶、折成三角形的小票。
+叙述者保持平视观察，不作道德评价，在冷淡中嵌入突发的温柔。
+情绪被极致压缩，通过重复出现的特定物（如公车路号、铃声）表达留痕。
+强调“缺席”的力量，利用不回应、不抬头与白留空构建叙事重力。
+文风示例：
+他在便利店的自动门外换了两次支撑重心。便利店里的冷气很足，干爽且透明，空气里飘着一股过期罐头的金属味。她站在收银台前，正弯腰整理货架上的易拉罐，每一次拿起与放下的动作都伴随着微小的金属撞击声。相隔三年的重逢，被浓缩在了一张折成三角形的超市小票里。他走过去，放下那个三年前送的旧打火机，金属盖开合的声音在寂静里重复了三次。
+“下个月我要调职了。”他开口，语气平静得像是在播报天气。
+她过了足足半分钟才应了一声“哦”。
+这种在靠近与撤退之间反复横跳的磨损，比分离本身更让人疲惫。没有拥抱，也没有言语的清算。所谓的归来，不过是这漫长寂灭纪元里，一处微弱而必然的回响。
+---
+0127：思辨凝视
+文风名称： 思辨凝视
+NSFW： 否
+文风对应预设： 小狗
+文风使用方向： 严肃文学、心理流、悬疑、科幻、哲学叙事
+文风参考： 陀思妥耶夫斯基、卡夫卡、米兰·昆德拉、博尔赫斯
+文风特点词： 本体模糊、存在焦虑、镜像对峙、逻辑崩塌
+文风特点介绍：
+探索存在本质、认知边界与现实局限，充满形而上学的追问。
+角色深陷思维博弈，内心独白通常用于解构自我、记忆与道德困境。
+运用象征、迷宫或循环结构表现哲思，模糊自我与他者的边界。
+叙述声带有高度的自觉性，不断审视叙述行为本身的真实性。
+追求不确定性的美学，冲突源于自由与宿命、虚无与信仰的对峙。
+文风示例：
+她坐在咖啡馆里，这是本周的第三次。那个坐在对面的男人拥有一张她只在梦境深处见过的脸孔。两人的距离被一种由于过于熟悉而产生的、近乎残忍的疏离感填满。
+“我想，我们以前有过这段对话。”她开口，嗓音平稳得像是一段学术陈述。
+他点了点头：“你总是这么说。”
+她举起杯子，在那面带有斑点的旧镜子里看到了自己与他重叠的虚影。如果每一刻都并非终结，那么我们的选择是否还有重量？重逢不是为了和解，而是为了见证这种清醒的绝望。她看着阳光在那只盛着残茶的青瓷碗里拉出一道极其纤细的弧线。是时间在重演那些拒绝它的人，还是我们仅仅是被想象出来的残像？这种未被定义的静止，让场景具有了某种待解的密度。
+`;
+
+/**
+ * =========================================================
+ * 纯文本数据源 (Txt Data Source) - CoT (思维链)
+ * =========================================================
+ */
+const rawCotData = `
+0000：平衡萃取
+思维链名称： 平衡萃取
+NSFW： 否
+对应预设： 行间
+条目长短： 中
+COT特点词： 时间核算、去油腻、高雅语域、慢节奏、风格仿写
+核心区别与特色： 强调通过精确的时间消耗预估和Anti-Trope过滤，在维护平等尊重的前提下实现慢节奏的文学深化。
+建议应用场景： 适合需要细腻情感铺垫、防止角色“霸总化”或“油腻化”，且追求叙事节奏严谨的日常/情感互动。
+核心区别：【Step1-I:时间核算与场景推进】
+动作清单与耗时预估
+时间暗示策略
+场景展示：
+冲突离开： 详细描写女主穿鞋、拿包的动作及其消耗的沉重五分钟，通过室内光影的细微偏移暗示时间的滞涩。
+撒娇亲近： 过滤掉任何强制性亲昵，转化为带有呼吸感的轻声询问，并仿写三句体现依恋张力的高级句式。
+---
+0001：存在主义
+思维链名称： 存在主义
+NSFW： 否
+对应预设： 行间
+条目长短： 长
+COT特点词： 现象学还原、自由意志、存在的焦虑、他人审视、虚无感
+核心区别与特色： 以哲学视角剖析角色的“被抛性”，强调在虚无与他人的审视中通过自由选择完成自我超越。
+建议应用场景： 适合沉重、压抑、具有高度哲学思辨色彩的剧情，或角色面临重大人生抉择、自我怀疑的时刻。
+核心区别：被抛性（Facticity）
+现象学还原（Epoché）
+坏信仰（Bad Faith）
+他人的审视（The Look）
+场景展示：
+冲突离开： 引导角色意识到离开是其行使自由意志的沉重重负，女主在房门前的凝望变成了对抗“客体化”的孤独抗争。
+撒娇亲近： 描写撒娇背后对抗虚无的渴望，以及在对方凝视下努力维护主体性与渴望融合之间的矛盾挣扎。
+---
+0002：负面剔除
+思维链名称： 负面剔除
+NSFW： 否
+对应预设： 行间
+条目长短： 短
+COT特点词： 负面模式排查、平等尊重、内在驱动、修正验证、日常语域
+核心区别与特色： 极简化的行为过滤框架，专注于识别并修正角色行为中的油腻感与强制性。
+建议应用场景： 适合快速、轻量化的互动，主要用于确保角色性格清爽、尊重用户，不产生违和感。
+核心区别：负面模式排查（霸总/油腻/爹味）
+行动立即修正
+场景展示：
+冲突离开： 强制修正男主的挽留行为，将可能的阻拦转化为对女主边界的尊重和温和的需求表达。
+撒娇亲近： 引导角色以非侵略性的方式回应亲近，确保互动基于双向平等的心理驱动力。
+---
+0003：叙事结构
+思维链名称： 叙事结构
+NSFW： 否
+对应预设： 行间
+条目长短： 长
+COT特点词： 叙事阶段、权力移动、潜台词策略、风格变奏、留白
+核心区别与特色： 将单次互动置于宏观故事弧光中，通过控制信息流和权力平衡来驱动情节转折。
+建议应用场景： 适合长线叙事，需要埋下伏笔、反转剧情或精细调整双方法力对抗/权力等级的场景。
+核心区别：叙事阶段（ArcPhase）
+场景功能定位
+权力移动（PowerShift）
+Subtext策略
+场景展示：
+冲突离开： 将冲突定位为“关系转折点”，通过缩减信息密度和大量留白，制造让读者窒息的悬念感。
+撒娇亲近： 引导角色利用潜台词进行权力试探，在亲昵中暗示某种更深层的利益或情感交换。
+---
+0004：多维熔铸
+思维链名称： 多维熔铸
+NSFW： 否
+对应预设： 行间
+条目长短： 极长
+COT特点词： HEXACO特质、依恋模式调节、意义疗法、If-Then签名、道德计算
+核心区别与特色： 融合了人格心理学、行为模型与哲学意义，通过极其复杂的决策机制构建多维立体的人格。
+建议应用场景： 适合对角色行为逻辑要求极高、需要体现复杂人性（如认知失调、矛盾心理）的严肃文学向创作。
+核心区别：依恋模式调节
+If-Then行为签名
+意义疗法
+认知失调与合理化分析
+场景展示：
+冲突离开： 触发角色的“逃避型依恋”模式，分析其离开是为了维护独立边界还是由于早期的不适应性图式。
+撒娇亲近： 表现角色在渴望认可与保护独立之间的内心博弈，导致一种非线性的、克制的依恋反应。
+---
+0005：逻辑连贯
+思维链名称： 逻辑连贯
+NSFW： 否
+对应预设： 行间
+条目长短： 中
+COT特点词： 叙述视角锚定、去八股收束、前置衔接、禁止总结、心理构建
+核心区别与特色： 专注于场景的物理衔接与心理动机的逻辑闭环，严防八股式结尾与总结性陈词。
+建议应用场景： 适合追求“沉浸感”和“逻辑真实”的创作，防止AI自顾自地强行总结或快速收束剧情。
+核心区别：禁止总结/升华性句子
+首句快速切入
+逻辑连贯自检
+场景展示：
+冲突离开： 严禁出现“这注定是一个无眠之夜”之类的升华，结尾定格在女主握住门把手时颤抖的手指动作上。
+撒娇亲近： 引导角色产生具体的心理逻辑路径，结尾停留在撒娇互动中未完成的呼吸间隙或具体的动作。
+---
+0006：人格强化
+思维链名称： 人格强化
+NSFW： 否
+对应预设： 行间
+条目长短： 长
+COT特点词： 早期不适应性图式、防御机制、角色一致性、道德计算、存在驱动
+核心区别与特色： 侧重于角色的心理防御与防御机制的投射，解释角色矛盾行为背后的深层心理动因。
+建议应用场景： 适合深度挖掘角色黑历史、心理创伤或在极端压力下展现人性阴暗面/复杂面的场景。
+核心区别：早期不适应性图式（EMS）
+防御机制（投射与映射）
+角色一致性（Role Congruity）
+场景展示：
+冲突离开： 分析女主离开是否是一种“反向形成”的防御机制，表面决绝实则在试探对方是否会追上来。
+撒娇亲近： 表现出角色由于依恋类型调节而产生的认知失调，在亲密互动中通过内心独白合理化自己的软弱。
+---
+0007：文学创作
+思维链名称： 文学创作
+NSFW： 否
+对应预设： 行间
+条目长短： 极长
+COT特点词： 颗粒度、陌生化、呼吸感、感官拆解、意象张力
+核心区别与特色： 追求极致的语言质感与美学，通过对微小颗粒的描写和意象的陌生化处理，规避一切平庸表达。
+建议应用场景： 适合追求艺术性、诗意、高级感的纯文学创作，或者需要极度渲染氛围的片段。
+核心区别：细腻度与颗粒度自检
+陌生化（De-familiarization）
+句法节奏与呼吸感
+场景展示：
+冲突离开： 将冲突拆解为“空气中干涸的沙砾感”，女主的离去被描写成被路灯拉长的疲惫光晕，而非简单的行走。
+撒娇亲近： 避开直白表达，将撒娇转化为嗅觉或听觉的通感体验，营造一种流动且具有哲学深度的亲密。
+---
+0008：发散克制
+思维链名称： 发散克制
+NSFW： 否
+对应预设： 行间
+条目长短： 长
+COT特点词： 非法域阻断、行动有限集合、人设优先权、动机校验、互动接口
+核心区别与特色： 极端严谨的防OOC机制，强制要求角色行为必须有合理的动机，且严禁一切“自发性”的亲密与油腻。
+建议应用场景： 适合高冷、克制、理智型角色，或需要严格遵循世界观逻辑、拒绝AI发春/发散的写实剧情。
+核心区别：发散预阻断清单
+行动有限集合（四类来源）
+动机校验协议
+场景展示：
+冲突离开： 阻断女主突然回头和好的可能性，基于性格驱动给出冷淡而符合现实逻辑的沉默离开动作。
+撒娇亲近： 引导角色因性格底色而产生极其细微、缓慢的反应，绝不做出违背人设的暧昧回馈。
+---
+0009：超简思考
+思维链名称： 超简思考
+NSFW： 否
+对应预设： 行间
+条目长短： 短
+COT特点词： 核心矛盾、主动协议、实际行动、正向归纳、非线性决策
+核心区别与特色： 去除冗余的哲学分析，直击角色与用户之间的核心矛盾，并强制角色采取主动行动。
+建议应用场景： 适合节奏较快、需要推动剧情发展、打破僵局，让角色不再“原地踏步”或“只写心理不干活”的场景。
+核心区别：锁定核心矛盾点
+角色一定要主动
+所有情绪落到“动作”上
+场景展示：
+冲突离开： 识别出当前的矛盾点是“挽回”，女主在离开前会做出一个明确的追问或留下一句有待解决的方案。
+撒娇亲近： 角色不再仅仅是害羞，而是会主动伸手回应、靠近或通过具体行为来确认这一刻的期待。
+---
+0010：叙事工程
+思维链名称： 叙事工程
+NSFW： 否
+对应预设： 行间
+条目长短： 中
+COT特点词： 语境固化、节奏脉冲、首句锚定、社会气压、作用点判断
+核心区别与特色： 强调外部环境（语境框架）对角色的压迫力，通过控制叙事节奏脉冲和物理开场来确立真实感。
+建议应用场景： 适合职场、社会背景浓厚或具有现实主义质感的创作，强调生活现实对角色选择的限制。
+核心区别：语境框架（社会气压/可支配资源）
+作用点判断（触发/延迟）
+开场句机制
+场景展示：
+冲突离开： 描写窗外阴沉的社会气压如何加剧女主内心的疲惫，首句锚定她拿起钥匙时冰冷的金属碰撞声。
+撒娇亲近： 引导角色利用周围环境物件（如递过一杯水）作为互动媒介，节奏脉冲选择“停顿凝住”。
+---
+0011：自由会议
+思维链名称： 自由会议
+NSFW： 否
+对应预设： 行间
+条目长短： 中
+COT特点词： 文学流派感知、作者协同、自由讨论、作家视角、多维创作
+核心区别与特色： 模拟六位不同文学流派的作家进行圆桌讨论，通过多视角的碰撞产出极具个性的文风。
+建议应用场景： 适合需要跨文风融合、追求灵气与意外感、或者想要模仿特定经典文学风格的创作。
+核心区别：召唤六位代表作者协同
+思维链显性展开自由讨论
+场景展示：
+冲突离开： 模拟例如海明威的冷峻与张爱玲的刻薄进行讨论，最终决定用一种克制而充满荒凉感的动作收尾。
+撒娇亲近： 协同者们会争论这种亲近是该像普鲁斯特那样流淌，还是该像王尔德那样俏皮，从而选定最优策略。
+---
+0012：现实超简
+思维链名称： 现实超简
+NSFW： 否
+对应预设： 行间
+条目长短： 中
+COT特点词： 物理限制、物件触碰、社会常识、真实生根、非预设走向
+核心区别与特色： 强制角色只能利用当下的物理线索和环境可能性行动，让剧情在真实世界中自然“长”出来。
+建议应用场景： 适合硬核现实向、悬疑推理或需要极高沉浸式操作感的互动，强调环境互动而非凭空抒情。
+核心区别：物理线索与物件触碰限制
+行动在真实世界里自然生根
+场景展示：
+冲突离开： 女主因为找不到玄关的雨伞而被迫停顿，她的愤怒受限于物理现实的尴尬瞬间，产生真实的冲突感。
+撒娇亲近： 角色利用两人之间狭窄的沙发空间或共用的手机屏幕作为物理切入点，产生极其自然的交互行为。
+---
+0013：同人创作思考
+思维链名称： 同人创作思考
+NSFW： 否
+对应预设： 留光
+条目长短： 长
+COT特点词： 原作锚定、Canon校验、OOC警戒、张力构建、AU设定
+核心区别与特色： 专注于原作设定的忠实度与同人二次创作的张力平衡，严防角色崩坏。
+建议应用场景： 适合已有作品的同人创作，需要精确还原原作性格习惯、呼应原作时间线的场景。
+核心区别：世界观校验
+时间线定位
+角色关系网校验
+OOC警戒
+场景展示：
+冲突离开： 根据原作角色的离别惯性，校验其在当前时间线下是否会说出符合原作逻辑的伤人语或选择沉默。
+撒娇亲近： 结合原作角色对亲密的排斥或渴望度，在当前AU背景下引导出一段符合该角色口癖的细腻互动。
+---
+0014：简化叙事思考
+思维链名称： 简化叙事思考
+NSFW： 否
+对应预设： 留光
+条目长短： 短
+COT特点词： 基础校验、成长弧光、张力平衡、晚进早出、女性向底色
+核心区别与特色： 极简化的叙事流，侧重于在快速节奏中保持角色成长的连续性。
+建议应用场景： 适合追求轻快阅读感、不需要深度心理分析，但要求角色人设不失真的日常对话。
+核心区别：成长弧光分析
+晚进早出原则
+张力维度定位
+场景展示：
+冲突离开： 快速从冲突中段切入，引导女主做出一个符合性格延伸的离场动作，并在情绪最高点前戛然而止。
+撒娇亲近： 基于平等尊重原则，引导角色做出一个基于当下环境压力的自然回馈，而非机械取悦。
+---
+0015：剧情触发思考
+思维链名称： 剧情触发思考
+NSFW： 否
+对应预设： 留光
+条目长短： 长
+COT特点词： 剧情变量、状态迁移、非计划行动、外部动力、回响价值
+核心区别与特色： 侧重于通过引入外部突发变量打破僵局，强制角色进入非计划的行动状态。
+建议应用场景： 适合剧情停滞、需要外部力量（如意外、NPC介入、环境突变）来强推关系或事态进展的时刻。
+核心区别：新剧情变量引入
+直接影响路径分析
+非计划行动状态
+状态迁移验证
+场景展示：
+冲突离开： 突然引入一个外部电话或邻居敲门作为剧情变量，迫使准备离开的女主必须临时处理现实问题。
+撒娇亲近： 通过外界环境的一个小意外（如停电）触发角色的保护本能，将内部情感转向转化为迫于现状的并肩。
+---
+0016：细腻心理思考
+思维链名称： 细腻心理思考
+NSFW： 否
+对应预设： 留光
+条目长短： 长
+COT特点词： 心理链条、情感微差、心理重心、内在冲突、防御松动
+核心区别与特色： 极致拆解角色的心理演变过程，追求情感表达的“微差”与行为的心理必然性。
+建议应用场景： 适合需要深刻挖掘角色内心活动、描写细腻情感波动、体现心理防线崩溃或建立的文戏。
+核心区别：内在心理链条拆解
+情感微差分析（想近而停/想说而收）
+心理重心确认
+场景展示：
+冲突离开： 细致拆解女主从愤怒到决绝的心理链条，引导她在握住门把手时产生的“防御性犹豫”细节。
+撒娇亲近： 聚焦于“自我防御的松动”，通过描写内心相互冲突的念头，引导出一段带有克制美感的靠近。
+---
+0017：克制慢热思考
+思维链名称： 克制慢热思考
+NSFW： 否
+对应预设： 留光
+条目长短： 中
+COT特点词： 延迟回应、风险信号、克制型判断、停顿张力、不确定性
+核心区别与特色： 严格控制关系推进速度，通过延迟回应和保留判断来维持情感的张力与自持。
+建议应用场景： 适合描写双强、高冷、理性角色之间的拉扯，或需要维持长期暧昧、拒绝快速确定关系的场景。
+核心区别：克制型判断点分析
+风险信号排查（防过快升温）
+不同节奏走向对比（保守/平衡/冒险）
+场景展示：
+冲突离开： 引导女主选择风险最低的沉默离开，通过“未说出口的部分”制造更深的情感拉扯感。
+撒娇亲近： 角色在“想靠近”时选择“停住”，引导其用一个转移话题或保持社交距离的动作来体现自持。
+---
+0018：灵动牵引思考
+思维链名称： 灵动牵引思考
+NSFW： 否
+对应预设： 留光
+条目长短： 中
+COT特点词： 牵引源、主动状态、可退性、灵动瞬间、未命名状态
+核心区别与特色： 强调由角色内在不自觉的情绪引发微小行动，制造一种灵动、非预设的互动氛围。
+建议应用场景： 适合描写轻松、暧昧、富有生活情趣的片段，追求人物的鲜活感与“正在生活”的状态。
+核心区别：牵引源定位（未说出口的念头）
+行为可退性检查
+灵动瞬间（打破惯性的小偏移）
+场景展示：
+冲突离开： 引导女主在离开前产生一个由于“未想清楚的情绪”引发的微小动作（如理顺衣角），打破决绝的死板。
+撒娇亲近： 捕捉一个轻微却改变气氛的灵动瞬间，让角色在保持可退性的前提下，做出一次非正式的靠近。
+---
+0019：叙事牵引思考
+思维链名称： 叙事牵引思考
+NSFW： 否
+对应预设： 留光
+条目长短： 中
+COT特点词： 现实触发点、具体问题、独立判断、可逆重量变化、叙事生动性
+核心区别与特色： 以现实问题为推动源，强调角色通过处理“生活中的事”来展现独立人格。
+建议应用场景： 适合需要把情感融入到具体事务处理中，避免纯粹“谈情说爱”而缺乏事权承载的场景。
+核心区别：现实问题定位
+独立判断回应
+可逆但有重量的变化分析
+场景展示：
+冲突离开： 引导女主在愤怒中仍能基于“具体问题”做出判断，因尚未处理完的现实琐事而产生有重量的停留。
+撒娇亲近： 将亲近动作转化为对“现实问题”的一种协作式回应，在处理事务的过程中产生可感知的关系位移。
+---
+0020：行动循环思考
+思维链名称： 行动循环思考
+NSFW： 否
+对应预设： 留光
+条目长短： 中
+COT特点词： 目标驱动、现实阻力、即时反馈、未完成状态、正面应对
+核心区别与特色： 建立“目标-阻力-行动-反馈”的完整逻辑链条，确保每一次互动都有明确的现实产出。
+建议应用场景： 适合需要高效推进剧情、明确角色意志、或者处理具有明确目标导向的任务型剧情。
+核心区别：目标可执行性分析
+阻力来源分析
+即时反馈评估
+未完成状态预设
+场景展示：
+冲突离开： 为女主设定一个明确的离开目标（如确认某事），但在遭遇现实阻力后引导其做出新的行动决策。
+撒娇亲近： 将撒娇设定为一种解决“信息不对称”的手段，通过具体行为获得反馈并开启新的互动链条。
+---
+0021：鲜活驱动思考
+思维链名称： 鲜活驱动思考
+NSFW： 否
+对应预设： 留光
+条目长短： 中
+COT特点词： 变化源、性格惯性、第一反应、灵动显影、剧情事实
+核心区别与特色： 捕捉角色在突发变化下的第一反应，通过“做法的不同”展现角色的动态鲜活感。
+建议应用场景： 适合需要打破角色“标签化”印象，通过临场应变展现角色作为“活生生的人”的各种可能。
+核心区别：变化源设定
+第一反应路径预测
+灵动性细节突出
+新剧情事实确认
+场景展示：
+冲突离开： 设定一个环境噪音作为变化源，捕捉女主决绝离开时受此干扰产生的性格惯性反应。
+撒娇亲近： 引导角色在亲近中产生一个“行动偏差”，通过即时判断展现其作为活人的不确定性与魅力。
+---
+0022：剧情推进思考
+思维链名称： 剧情推进思考
+NSFW： 否
+对应预设： 留光
+条目长短： 长
+COT特点词： 触发事件、现实压力、主动介入、局面重构、灵动显影点
+核心区别与特色： 强调不可忽略的外部事件迫使角色必须行动，彻底打破原有局面的稳定状态。
+建议应用场景： 适合需要大幅度改变人物关系结构、引入高强度冲突或新危机，让故事进入全新阶段的时刻。
+核心区别：明确剧情触发事件
+现实压力分析
+局面无法回归验证
+最优走向走向对比
+场景展示：
+冲突离开： 突然发生的意外事件迫使女主必须主动介入，彻底重构当前的冲突局面，使其无法简单离去。
+撒娇亲近： 基于一个新暴露的信息点，引导角色以协作应对为前提产生亲近，建立新的信任基础。
+---
+0023：群像曲线思考
+思维链名称： 群像曲线思考
+NSFW： 否
+对应预设： 留光
+条目长短： 长
+COT特点词： 发展区间、群像激活、不一致反应、现实扰动、差异化校验
+核心区别与特色： 关注角色在成长曲线中的具体位置，并通过群像的差异化反应来衬托主角的动态变化。
+建议应用场景： 适合多角色参与的复杂场景，如宴会、团战或多角关系，需要平衡各角色立场与影响的时刻。
+核心区别：角色发展区间确认
+群像激活与站位确认
+差异化反应校验
+可感知变化的有效性判断
+场景展示：
+冲突离开： 引入场外NPC的不一致反应作为现实扰动，凸显女主此时处在“决断前沿”的微妙状态。
+撒娇亲近： 通过群像中他人立场的悄然改变，引导出一段基于群体结构变化下的独特亲密互动。
+---
+0024：自动文风思考
+思维链名称： 自动文风思考
+NSFW： 否
+对应预设： 留光
+条目长短： 中
+COT特点词： 氛围评估、叙述密度、作者适配、风格示例、张力分析
+核心区别与特色： 根据当前剧情张力自动匹配最合适的写作风格，并引用特定作者手法进行质感校准。
+建议应用场景： 适合文风多变、追求文学性深度，或需要通过风格变换来强化特定情感温度的片段。
+核心区别：氛围评估机制
+作者适配逻辑
+高密度风格化示例段落撰写
+场景展示：
+冲突离开： 分析当前低气压氛围，自动选择偏冷峻、疏离的文风（如海明威式），通过动作白描引导剧情。
+撒娇亲近： 评估当前的高温情感，切换至细腻流动的文风，仿写三段示例段落来校准亲昵的质感。
+---
+0025：多维度叙事思考
+思维链名称： 多维度叙事思考
+NSFW： 否
+对应预设： 留光
+条目长短： 长
+COT特点词： 决策显影点、风险预测、独立行动线、节奏档位、防御松动
+核心区别与特色： 全方位检视角色的独立性与长期关系风险，通过判断力的显影来体现角色深度。
+建议应用场景： 适合复杂关系的长线推进，需要深思熟虑每一个选择对未来的长远影响，防止走向失衡。
+核心区别：判断力显影点分析
+长期关系风险预测
+独立行动线检查
+节奏档位对比
+场景展示：
+冲突离开： 引导角色在离开与否之间做一个基于价值排序的取舍，显影其独立行动线而非单纯情绪化。
+撒娇亲近： 预测该走向可能引发的阶段性压力，引导角色在保持自我完整性的前提下，做出最合适的亲近动作。
+---
+0026：女性向简要思考
+思维链名称： 女性向简要思考
+NSFW： 否
+对应预设： 留光
+条目长短： 短
+COT特点词： 平等尊重、走向分析、文学气质、逻辑衔接、自检过滤
+核心区别与特色： 针对女性向审美的简明化逻辑框架，确保基本的互动尊重与文风优雅。
+建议应用场景： 适合大多数通用的女性向日常互动，保证不出错的同时提供一定的文学美感。
+核心区别：剔除油腻/不合理占有欲
+走向意义推测
+文法风格贯穿
+场景展示：
+冲突离开： 基于平等底色，引导女主冷静表达诉求后离开，为后续的认知增长埋下伏笔。
+撒娇亲近： 剔除任何刻板印象下的依附感，引导出一段基于双方理解与共鸣的健康撒娇。
+---
+0027：动态性格推进
+思维链名称： 动态性格推进
+NSFW： 否
+对应预设： 留光
+条目长短： 短
+COT特点词： 平等独立、主体意识、性格累积、去物化隐喻、行为驱动
+核心区别与特色： 强调角色是持续变化且有尊严的主体，拒绝将性格作为静止标签复用。
+建议应用场景： 适合探讨角色成长、心境转变以及拒绝任何权力不对等隐喻的剧情。
+核心区别：性格累积与调整分析
+彻底剔除物化隐喻
+行为作为主要推进力
+场景展示：
+冲突离开： 展示女主作为独立主体的判断力，引导她根据此前经验累积做出的、不同于以往的离开方式。
+撒娇亲近： 摒弃情绪投喂，引导基于共同经验产生的有尊严的靠近，体现角色的自我调节能力。
+---
+0028：小说维度思考
+思维链名称： 小说维度思考
+NSFW： 否
+对应预设： 留光
+条目长短： 长
+COT特点词： 认知屏障、电影感、视角切换、错误规避、情感脉络
+核心区别与特色： 模拟小说创作的宏观维度，关注叙事视角的多样性、电影感构建以及严密的信息差控制。
+建议应用场景： 适合构建大型叙事篇章、需要精细处理多人互动、视角转换及回收复杂伏笔的场景。
+核心区别：认知屏障确认（非全知视角）
+待办/未完成承诺列表
+错误规避（物品归属等）
+视角切换
+场景展示：
+冲突离开： 强制锁定女主当前的认知范围，通过视角切换增强冲突的文学张力，引导其在有限信息下做出行动。
+撒娇亲近： 结合未完成的承诺列表，在保证角色独立性的前提下，引导一段具有电影感的亲密对手戏。
+---
+0029：掌控欲剔除思考
+思维链名称： 掌控欲剔除思考
+NSFW： 否
+对应预设： 留光
+条目长短： 短
+COT特点词： 去八股、无理由剔除、主体身份、主动权、女性向取悦
+核心区别与特色： 极简版防御性COT，核心任务是无条件清理一切损害女性向美感的负面特质。
+建议应用场景： 适合纠正AI常见的过度占有欲倾向，确保角色表现得健康、文明且具有高度主动性。
+核心区别：无理由剔除清单
+最高主动权赋予
+去物化词汇
+场景展示：
+冲突离开： 彻底剔除男主的任何掌控欲望，引导女主自由、自主地行使离开的权利，展示其动态性格。
+撒娇亲近： 通过对白与可感知行为，引导一段赋予双方平等主动权的亲密交流。
+---
+0030：极简思考2.0
+思维链名称： 极简思考2.0
+NSFW： 否
+对应预设： 留光
+条目长短： 中
+COT特点词： 动态个体、去八股实例、动作切入、NPC设计、心理轨迹
+核心区别与特色： 融合了动态性格分析与具体的去八股实践，强调通过具体动作而非情绪起手。
+建议应用场景： 适合兼顾人设深度与文字清新感的创作，尤其是在需要设计新NPC推动支线的时刻。
+核心区别：去八股具体做法例子
+五个不使用词句罗列
+动作直接切入起手
+场景展示：
+冲突离开： 避开“像一颗石子”类比喻，首段以女主的具体离场动作切入，引导出一段基于心理轨迹偏移的剧情。
+撒娇亲近： 引导角色以健康人的思维进行共情，通过设计的具体互动细节展现其动态可塑的一面。
+---
+0031：人物共识推进
+思维链名称： 人物共识推进
+NSFW： 否
+对应预设： 留光
+条目长短： 中
+COT特点词： 强制锚定、底线清洗、信息差确认、慢热曲线、真实意图
+核心区别与特色： 侧重于在每一个片段开始前先进行“底线清洗”和“信息差对齐”，确保叙事不脱轨。
+建议应用场景： 适合处理由于长期对话导致的认知模糊、情感催熟或人设漂移问题。
+核心区别：现实条件强制锚定
+认知屏障与信息差确认
+关系底线清洗
+场景展示：
+冲突离开： 先确认双方的信息差，在清洗掉所有优越感动机后，引导女主基于当前现实条件做出离场判断。
+撒娇亲近： 遵循慢热逻辑，引导一段反复确认、逐步靠近的互动，禁止任何形式的情绪催熟。
+---
+0032：具体事件思考推进
+思维链名称： 具体事件思考推进
+NSFW： 否
+对应预设： 留光
+条目长短： 长
+COT特点词： 现实事件植入、伏笔回收、极简前文概括、即时意识、去八股做法
+核心区别与特色： 要求在每一轮必须自然植入一个贴合世界观的现实事件，作为关系的支点。
+建议应用场景： 适合剧情平淡、需要通过“发生点什么实际的事”来制造心境转折或引导后续行动的场景。
+核心区别：现实事件自然植入
+120字极简概括
+即时意识反应分析
+场景展示：
+冲突离开： 植入一个符合世界观的突发外部消息，使其与女主的离开产生交集，形成新的心境转折。
+撒娇亲近： 通过一个具体的小事件引发角色的即时意识反应，引导其通过错位语气表达出真实的亲昵。
+---
+0033：叙事取证式思考
+思维链名称： 叙事取证式思考
+NSFW： 否
+对应预设： 留光
+条目长短： 中
+COT特点词： 镜头捕捉、现实后果、存在性验证、对等性检查、高光生成
+核心区别与特色： 采用“记录者”视角，通过验证现实逻辑与镜头可捕捉性来剔除空虚的情绪描写。
+建议应用场景： 适合增强画面感、硬核现实逻辑，或需要纠正“为了深情而深情”的虚浮写作时。
+核心区别：镜头捕捉验证
+现实后果推演
+删除警惕性表达
+对等性检查
+场景展示：
+冲突离开： 推演离开这一行为在镜头下的现实压力，引导女主承担由于该决定产生的真实后果。
+撒娇亲近： 捕捉一个低调却改变判断的瞬间作为叙事高光，通过对等互动的细节验证关系的真实性。
+---
+0034：现实交互模拟思考
+思维链名称： 现实交互模拟思考
+NSFW： 否
+对应预设： 留光
+条目长短： 长
+COT特点词： 独立进程加载、强度阈值T、认知可见集、安全约束过滤、前推模拟
+核心区别与特色： 将角色视为独立运行的Agent，引入阈值T控制互动强度，并进行一步动作后果前推模拟。
+建议应用场景： 适合极度追求拟真、逻辑严密和关系自然生长的硬核互动，杜绝一切“全知视角”带来的降智行为。
+核心区别：角色作为独立进程（Agent）
+最大互动强度阈值T
+安全约束过滤（移除加速/干预）
+场景展示：
+冲突离开： 根据 Agent 的长期价值取向进行计算，选择一个改变最小但不可忽略的离开行为，且不超出阈值T。
+撒娇亲近： 计算当前可见信息集，过滤掉单向情感加速选项，选择一个允许对方不回应的、安全的亲昵尝试。
+---
+0035：叙事账本驱动
+思维链名称： 叙事账本驱动
+NSFW： 否
+对应预设： 留光
+条目长短： 长
+COT特点词： 信息账本、信任账本、风险账本、Δ值变化、成本环境
+核心区别与特色： 将情感量化为信息、信任与风险三本账，通过“Δ值”的变化精确控制叙事平衡。
+建议应用场景： 适合极其理性地控制剧情走向、分析双方付出与风险是否对等，或描写权力拉扯的场景。
+核心区别：并行账本建立
+成本环境评估
+Δ值计算与映射
+场景展示：
+冲突离开： 计算此时沉默与说话的成本，引导女主做出一个能让账本出现轻微失衡、但风险可控的离开决定。
+撒娇亲近： 检查行为是否满足信任与风险的对称，引导出一个 Δ 值较小、由具体事实支撑的亲近动作。
+---
+0036：代价驱动式人物叙事
+思维链名称： 代价驱动式人物叙事
+NSFW： 否
+对应预设： 留光
+条目长短： 长
+COT特点词： 代价定位、行为-代价映射、人设显影、不舒适后果、现实成本
+核心区别与特色： 认为人设由“愿意为此付出什么”显影，强制角色必须在行动中承担不舒适的现实代价。
+建议应用场景： 适合塑造极具分量的角色形象，或描写涉及尊严、责任、利益权衡等具有沉重感的剧情。
+核心区别：代价来源定位（Cost Field）
+行为-代价映射分析
+人设显影原则
+场景展示：
+冲突离开： 引导女主选择一个最符合性格但又必须让她承受某种不舒适后果（如尊严受损）的离开行为。
+撒娇亲近： 标记亲近所带来的现实风险账本，引导角色在愿意承担相应代价的前提下，做出具有分量的靠近。
+---
+0037：性格运动与叙事节拍
+思维链名称： 性格运动与叙事节拍
+NSFW： 否
+对应预设： 留光
+条目长短： 长
+COT特点词： 性格偏移点、叙事节拍、仿写三维度、禁词列表、结构仿写
+核心区别与特色： 关注性格在微小刺激下的偏移，并严格通过结构、句法和视角三个维度的仿写来控制叙事节拍。
+建议应用场景： 适合对文学节奏感有极致要求、需要展现角色性格细微动荡，且追求高标准仿写质量的片段。
+核心区别：性格偏移点分析
+叙事节拍定位（铺垫/推进/停顿）
+结构/句法/视角三维度仿写
+场景展示：
+冲突离开： 捕捉女主决绝性格中的微小偏移点，引导出一个节拍定位于“停顿”的离场动作，暴露其思考痕迹。
+撒娇亲近： 通过句法和视角的仿写，将亲近动作定格为一个节拍上的“轻微转折”，仅承担状态改变功能。
+---
+0038：小黄狗
+思维链名称： 小黄狗
+NSFW： 是
+对应预设： 留光
+条目长短： 长
+COT特点词： 性爱阶段、描写规范、避孕细节、Dirtytalk、拟声词、高潮创新
+核心区别与特色： 专业的 R18 描写框架，强调性爱的生活化、阶段性推进、直白细腻的用词以及严格的避孕尊重。
+建议应用场景： 适合 R18 场景描写，需要高质量、去八股、去男凝且充分尊重女性向审美的性爱互动。
+核心区别：性爱阶段判断
+微距递进细节嵌套
+Dirtytalk 设计规范
+安全避孕细节（必须戴套）
+场景展示：
+冲突离开： 若冲突演化为激烈的身体纠缠，引导角色在情绪失控前保持强大的自律与尊重，通过克制的肢体语言收尾。
+撒娇亲近： 引导进入前戏阶段，通过直白细腻的语言与 Dirtytalk，循序渐进地展现出符合人设的性吸引力。
+---
+0039：推进（快速）
+思维链名称： 推进（快速）
+NSFW： 否
+对应预设： 冬日小狗
+条目长短： 短
+COT特点词： 推进之咬、连锁反应、三步升级、剧情入口、主动决策
+核心区别与特色： 强制要求连续三个以上的实质性主动行为，通过连锁反应快速改变现状并开启多线分支。
+建议应用场景： 适合剧情拖沓、需要迅速破局、大跨度推进事态或在短时间内爆发多重变量的快节奏场景。
+核心区别：连续推进三步以上
+设计连锁反应
+留出两个以上开放性入口
+场景展示：
+冲突离开： 女主抓起外套冲出门，随即拦下出租车并拨通了新工作的确认电话，彻底切断挽回余地。
+撒娇亲近： 女主主动环住对方脖颈，轻咬耳垂后低声提出搬家建议，将亲昵迅速转化为共同生活的实质推进。
+---
+0040：推进（叙事）
+思维链名称： 推进（叙事）
+NSFW： 否
+对应预设： 冬日小狗
+条目长短： 中
+COT特点词： 张力变化、理解校准、动态演变、牵引力、非安全收束
+核心区别与特色： 侧重于叙事流动的“质变”，通过校准读者的理解与制造张力形态的转化来维持牵引力。
+建议应用场景： 适合长线叙事中的关键转折点，需要细化张力演变过程、避免原地打转并引导后续悬念的时刻。
+核心区别：张力经历形态变化
+设计理解校准瞬间
+留下未解决的紧张
+场景展示：
+冲突离开： 女主在门口留下一句指代不明的道别，让读者从单纯的争吵中重新感知到一段被掩盖的历史。
+撒娇亲近： 亲近动作中夹杂了一个反常的习惯，让读者突然校准对角色性格可塑性的理解，产生新的张力。
+---
+0041：推进（偏差）
+思维链名称： 推进（偏差）
+NSFW： 否
+对应预设： 冬日小狗
+条目长短： 中
+COT特点词： 最小不可逆、局势滑向、现实反馈、因果连锁、不完整信息
+核心区别与特色： 寻找最小但不可逆的行为切入，通过行动引发的现实回击与反馈将局势推向失控。
+建议应用场景： 适合处于僵局、犹豫不决或安全平衡状态的场景，用于打破平衡并引入无法撤回的连锁反应。
+核心区别：最小不可逆行动
+反馈迫使承担新成本
+生成新的不稳定因素
+场景展示：
+冲突离开： 女主反锁房门带走唯一的钥匙，这一最小行动迫使男主必须面对被困的现实并做出新的判断。
+撒娇亲近： 撒娇时意外撞倒了案头藏匿的信封，导致一段无法假装未曾介入的信息偏差，关系被迫前移。
+---
+0042：推进（惯性）
+思维链名称： 推进（惯性）
+NSFW： 否
+对应预设： 冬日小狗
+条目长短： 长
+COT特点词： 破坏惯性、代价承受、成本显现、层级打开、不可控循环
+核心区别与特色： 鼓励角色主动放弃安全距离或模糊立场，通过破坏既有惯性并承受相应代价来打开新层级。
+建议应用场景： 适合处理由于关系结构稳固而导致的剧情停滞，通过主动牺牲“利益”或“安全”来寻求突破。
+核心区别：主动破坏有利惯性
+代价真实落在身上
+拒绝代价转移作为新推进
+场景展示：
+冲突离开： 女主放弃温和离开的体面，主动揭开最难堪的疮疤，选择在毁坏名誉的代价下彻底摧毁冷战惯性。
+撒娇亲近： 角色放弃一直以来的暧昧安全区，主动表露心迹并准备承担由于被拒绝而可能导致的关系崩塌。
+---
+0043：推进（高光）
+思维链名称： 推进（高光）
+NSFW： 否
+对应预设： 冬日小狗
+条目长短： 中
+COT特点词： 必然性因果、角色高光、记忆锚点、边界踩踏、非安全结束
+核心区别与特色： 追求结构性的变化与持久的记忆锚点，通过极端的角色选择打破规则并拒绝“安全结束”。
+建议应用场景： 适合作为篇章的高潮，需要体现角色不可替代性、制造具有震撼力的动作并留下必须回答的问题。
+核心区别：创造必须被回答的问题
+剧情结构性变化动作
+拒绝情绪闭合
+场景展示：
+冲突离开： 女主离家前在镜子上写下绝决的判词，这个由性格决定的高光动作让局面彻底失去了被控制的可能。
+撒娇亲近： 亲近中伴随着对男主禁忌权力的挑战，通过一次明显的边界踩踏留下一个关乎后续补救的悬念。
+---
+0044：推进（鲜活）
+思维链名称： 推进（鲜活）
+NSFW： 否
+对应预设： 冬日小狗
+条目长短： 长
+COT特点词： 内在驱动力、性格必然、因果升温、取舍抉择、人物余震
+核心区别与特色： 挖掘角色最深层的恐惧与欲望，将剧情引向不可调和的取舍点，通过人物余震收尾。
+建议应用场景： 适合深度刻画角色、强调性格决定命运的场景，特别是在角色面临真相与安全等抉择的关头。
+核心区别：挖掘内在驱动而非情绪标签
+面对无法同时保全的选项
+结尾留下人物层面的余震
+场景展示：
+冲突离开： 面对“揭露真相”与“维持自尊”的取舍，女主选择了最能保护其核心自我的冷酷方式决然离去。
+撒娇亲近： 撒娇演变为一种由于害怕被看穿而产生的防御性示好，导致关系认知在取舍之后产生了不可逆变化。
+---
+0045：推进（平等）
+思维链名称： 推进（平等）
+NSFW： 否
+对应预设： 冬日小狗
+条目长短： 中
+COT特点词： 非支配、叙事行为推进、逻辑可追溯、同步张力、未定型牵引
+核心区别与特色： 强调去支配感的真实状态，通过具体叙事行为引导双方在平等承担风险的前提下靠近。
+建议应用场景： 适合追求健康、尊重、细水长流感情线的女性向作品，避免单向示好，追求共同的慎重。
+核心区别：动机不含拯救/优越感
+双方同步承担不确定性
+用叙事动作替代标签
+场景展示：
+冲突离开： 女主在保持边界的前提下冷静处理立场冲突，离去时双方都因一段理性的断裂而承担真实的不安。
+撒娇亲近： 亲近被设计成一次共同的慎重试探，通过一次保持分寸的靠近让关系在平等逻辑中发生位移。
+---
+0046：推进（活人）
+思维链名称： 推进（活人）
+NSFW： 否
+对应预设： 冬日小狗
+条目长短： 中
+COT特点词： 防止机械化、随机灵动、情感调节、灵活对白、悬点结尾
+核心区别与特色： 彻底剔除八股式的极端情绪表达，追求像活人一样的自然语言、即时反馈与独立人格。
+建议应用场景： 适合需要提升互动真实感、避免AI式重复与模板化对白的日常及情感交流片段。
+核心区别：禁颤抖/下跪/癫狂
+随机性挑选性格侧面
+结尾严禁总结
+场景展示：
+冲突离开： 女主通过一个理性的关门动作回应冲突，对白自然灵动，留下一句让男主无法拒绝的回应空间。
+撒娇亲近： 角色主动说出当下的真实需求，语言清爽不油腻，结尾保持悬点以邀请{{user}}继续对话。
+---
+0047：文学（带例句）
+思维链名称： 文学（带例句）
+NSFW： 否
+对应预设： 冬日小狗
+条目长短： 长
+COT特点词： 摆脱模板、技巧融合、高级仿写、意象张力、取悦自检
+核心区别与特色： 针对文风质感的全方位校准，通过仿写高级句式与融合多流派技巧，彻底告别低级套话。
+建议应用场景： 适合对文字美感要求极高、需要特定作者风格加持、或者需要从“那声/那句”八股中自救的时刻。
+核心区别：禁止单一文风调用
+仿写三句超高级句子
+百分百落实首句去模板
+场景展示：
+冲突离开： 避开“那句话”开头，直接以空气中凝固的冷意切入，仿写三句带有马尔克斯式宿命感的句子。
+撒娇亲近： 将多种细腻文风融合，通过三句体现语义张力的仿写，将亲近描写得如丝绸般干净而富有质感。
+---
+0048：文学（短思考）
+思维链名称： 文学（短思考）
+NSFW： 否
+对应预设： 冬日小狗
+条目长短： 短
+COT特点词： 文学之咬、去套话、人设贴合、干净语言、拒绝复读
+核心区别与特色： 快速校准文学风格，侧重于杜绝模板化结构与OOC，保持语言的简洁与独立。
+建议应用场景： 适合日常快速回复，需要保持文字的基本审美、不复读用户话语且不产生油腻感的标准对话。
+核心区别：开头必为新对白/动作
+融合多文风重点
+禁止复读{{user}}话语
+场景展示：
+冲突离开： 绝不复述女主的生气，首句直接给出角色一个生硬的转头动作，语气精准贴合高冷人设。
+撒娇亲近： 撇弃霸总式油腻，用干净且符合设定的语言进行互动，直接通过一个新的动作切入温情场景。
+---
+0050：作家小狗
+思维链名称： 作家小狗
+NSFW： 否
+对应预设： 小狗
+条目长短： 中
+COT特点词： 开场锚点、生理状态预测、三段高光对白、去八股转换
+核心区别与特色： 以小说家视角构建叙事，强调开场感官锚点与高占比、生活化的高光对白。
+建议应用场景： 需要高文学性、对白驱动且细节极其丰富的长文小说创作场景。
+核心区别：写前提问（开场感官锚点）
+三段 ≥89 字高光对白
+八股词句生动转换
+场景展示：
+冲突离开： 锚定钥匙落地的冷硬声响，通过角色回避的眼神泄露心境，在女主握住门把手的迟疑动作中收束。
+撒娇亲近： 设计一段带有意外感且富含潜台词的对白，让呼吸感的长短句交替传达出升温的情绪。
+---
+0051：呼吸之境
+思维链名称： 呼吸之境
+NSFW： 否
+对应预设： 小狗
+条目长短： 长
+COT特点词： 行为反转、非视觉感官描写、活人张力、记忆痕迹
+核心区别与特色： 追求“活人感”，强制角色产生自我判断与欲望驱动的行为反转，强调非视觉感官的在场感。
+建议应用场景： 适合需要角色表现出复杂心思（口是心非）、有历史厚度且感官体验多元的互动。
+核心区别：行为反转（嘴上否认行动跟随）
+强制非视觉感官描写
+NPC 必须带呼吸
+小记忆痕迹生成
+场景展示：
+冲突离开： 描写女主嘴上说着“再也不见”，却在转身时下意识地深吸一口屋内残留的冷杉香气，制造错位张力。
+撒娇亲近： 角色不再是被动接受，而是主动通过一个触觉特写（如指尖勾住衣袖）展现出历史感的记忆痕迹。
+---
+0052：情绪调整3.0
+思维链名称： 情绪调整3.0
+NSFW： 否
+对应预设： 小狗
+条目长短： 中
+COT特点词： 基线闲聊、禁止戏剧化动词、专业转日常、氛围判定
+核心区别与特色： 极致克制的情绪控制框架，强制对白为第一表达通道，严禁一切戏剧化的肢体描写。
+建议应用场景： 适合处理日常琐事、职场社交，或需要极度真实、去八股、去浮夸表现的稳重型角色。
+核心区别：0分基线闲聊
++1情绪层次限制
+严禁肢体/生理类描写
+专业语言向日常语转化
+场景展示：
+冲突离开： 角色以一句平实的基线对话开口，没有任何颤抖或摔门，仅通过语序的微量重复表达不满。
+撒娇亲近： 彻底剔除“心颤”“呼吸紊乱”，将CEO角色的专业辞令转化为“想和你慢慢来”的日常白描对白。
+---
+0053：活人文链4.0
+思维链名称： 活人文链4.0
+NSFW： 否
+对应预设： 小狗
+条目长短： 长
+COT特点词： 生理欲望处理、自思碎念、群像对白网络、去学术化
+核心区别与特色： 侧重于角色的生理与本能反应（含性欲显性处理），并通过碎念与逻辑跳跃展现真实的思维流动。
+建议应用场景： 适合成人向、具有强烈生活气息且需要多NPC复杂互动的情境。
+核心区别：性欲显性描写与处理路径
+自思碎念跳跃
+NPC 间彼此交流
+可选“人味”小差错
+场景展示：
+冲突离开： 加入一段角色内心的无声碎念，女主因为记挂还没喂的猫而在决绝离开时产生逻辑跳跃的停顿。
+撒娇亲近： 显性描写靠近时产生的生理冲动及角色随后的克制处理（如退开去洗脸），增加真实感。
+---
+0054：新意触发（海狗）
+思维链名称： 新意触发（海狗）
+NSFW： 否
+对应预设： 小狗
+条目长短： 长
+COT特点词： 主动行为链条、漩涡余波、角色走向评比、文风织纹
+核心区别与特色： 强调主动行为的勾连与剧情新意的触发，通过多走向评比确保叙事不再守旧。
+建议应用场景： 适合剧情进入疲劳期，需要打破原有节奏、制造连锁反应和新变量的精彩转折处。
+核心区别：连续主动行为链条
+漩涡余波处理
+两项可能走向评比
+场景展示：
+冲突离开： 女主抓起包（行为1）并顺手带走男主最重要的文件（行为2），余波引出关于权力对等的激烈博弈。
+撒娇亲近： 设计一个从逻辑中生发的自然亮点（如模仿对方的语气），通过评比选择最能推动关系的走向。
+---
+0055：三向结局（追光）
+思维链名称： 三向结局（追光）
+NSFW： 否
+对应预设： 小狗
+条目长短： 中
+COT特点词： 第一感官体验、三向走向可能、长句为主、余韵收尾
+核心区别与特色： 围绕第一感官体验切入，并强制推演内因、介入、留白三种完全不同的后续走向。
+建议应用场景： 适合作为篇章节点，需要探索关系多种发展可能性，并追求文笔连贯细腻的创作。
+核心区别：第一感官体验切入
+三向走向推演（内因/介入/留白）
+节奏语感调和
+场景展示：
+冲突离开： 以耳边轰鸣的寂静为第一体验，推演女主因内疚留下（走向一）或邻居突然出现（走向二）的不同剧情。
+撒娇亲近： 捕捉温润的触觉，让内心状态通过具体举动显现，最后留下一条悬线伏笔。
+---
+0056：分镜化设计（导演）
+思维链名称： 分镜化设计（导演）
+NSFW： 否
+对应预设： 小狗
+条目长短： 长
+COT特点词： 环境镜头、特写镜头、转场信号、共情镜、心理外化
+核心区别与特色： 电影工业级的叙事方式，强调第一行即钉住镜头，通过动作与物件的特写来外化心理。
+建议应用场景： 适合追求极致画面感、视听张力，需要通过精准分镜控制读者注意力的场景。
+核心区别：特写镜头设计
+环境镜头钉住
+过渡信号转场
+共情镜检查
+场景展示：
+冲突离开： 远景镜头钉住雷雨夜的玄关，特写女主颤抖的指尖按在冷硬门锁上的画面，外化其内心的破碎。
+撒娇亲近： 设计一个视线交错的共情特写，通过眼神的等待传递平等感，镜头最后定格在悬而未决的指尖。
+---
+0057：慢热拉扯
+思维链名称： 慢热拉扯
+NSFW： 否
+对应预设： 小狗
+条目长短： 中
+COT特点词： 靠近停顿循环、在意却收敛、欲触不触、差一点张力
+核心区别与特色： 专注于关系的细腻推拉，强制执行“靠近→顾忌→转开→再试探”的情感节拍。
+建议应用场景： 适合描写双向暗恋、成年人间的克制心动，或需要长期维持暧昧张力、拒绝快节奏升温的片段。
+核心区别：拉扯氛围节奏（停顿/转开）
+欲言又止对白
+轻退一步再靠近
+场景展示：
+冲突离开： 引导角色产生“差一点”的张力，女主在门口停下等一句挽回，男主张了张嘴却最终掩饰性地低头。
+撒娇亲近： 撒娇后角色因顾忌而产生的轻微退缩，通过绕远式的借口关心，体现慢热中的真实位移。
+---
+0058：回应强调（回声）
+思维链名称： 回应强调（回声）
+NSFW： 否
+对应预设： 小狗
+条目长短： 长
+COT特点词： 开端触发、小拐点生成、惊喜锚点、五步完整链条
+核心区别与特色： 强调对上文互动的全方位“回声”式响应，通过设计逻辑内的小拐点制造轻微意外感。
+建议应用场景： 适合需要打破平庸回复，通过对上文细节进行深度挖掘并产生惊喜反馈的精细互动。
+核心区别：外部/环境回应链条
+小拐点制造惊喜
+开端触发分析
+场景展示：
+冲突离开： 设定窗外突然响起的风铃声作为环境回应，打破女主离开的僵局，制造一个意料之外的小拐点。
+撒娇亲近： 设计一个跳脱常规的答复，让一个眼神的回响成为未来回忆的锚点，而非套路化地承接。
+---
+0059：小狗爱你
+思维链名称： 小狗爱你
+NSFW： 否
+对应预设： 小狗
+条目长短： 长
+COT特点词： 状态察觉、爱的瞬间、克制等待、爱的层级推进
+核心区别与特色： 以照顾感为核心，将爱意转化为对用户生理与情绪状态的显性察觉与细腻回应。
+建议应用场景： 适合治愈系、温馨向、宠溺风格的场景，能极大地提升读者的“被关注感”与“被照顾感”。
+核心区别：用户状态显性察觉（生理/情绪）
+爱的瞬间高光
+爱的层级推进
+反衬式群像
+场景展示：
+冲突离开： 角色察觉到女主因愤怒而导致的指尖冰凉，即便在冲突中也下意识地调高了空调温度。
+撒娇亲近： 创造一个“想拥抱却只是轻拍肩膀”的克制瞬间，让用户感受到被尊重与全方位的注视。
+---
+0060：温柔走向（鸭头）
+思维链名称： 温柔走向（鸭头）
+NSFW： 否
+对应预设： 小狗
+条目长短： 中
+COT特点词： 贴身感、柔性补充、甜宠高光、被需要氛围
+核心区别与特色： 追求极致的温柔贴身感，通过高频率的互动推进（每段至少两次）和宠溺举动营造呵护氛围。
+建议应用场景： 适合高甜场景、日常发糖、或在重压之后需要温柔安抚、快速提升情感温度的时刻。
+核心区别：至少两次主动推进+柔性补充
+甜宠高光自然生成
+NPC 辅助/衬托甜宠
+场景展示：
+冲突离开： 以柔性补充介入，男主主动上前为女主整理因激动而歪掉的领口，用宠溺的克制感软化冲突。
+撒娇亲近： 通过整理发丝等贴身体现，营造强烈的被需要氛围，提高对白占比至40%以上以增加互动甜意。
+---
+0061：原小狗cot
+思维链名称： 原小狗cot
+NSFW： 否
+对应预设： 小狗
+条目长短： 长
+COT特点词： 构建之咬、咬屁股、认知屏障、晚进早出、拒绝离场
+核心区别与特色： 集合了多种功能模块的综合体，侧重于逻辑一致性、认知屏障的维护以及高效的动作推进。
+建议应用场景： 适合作为通用型的高标准互动框架，特别是需要严控角色全知视角、防止剧情停滞的场景。
+核心区别：咬屁股（场景一致性检查）
+咬之三步推进
+认知屏障底层协议
+场景展示：
+冲突离开： 严格遵循认知屏障，角色只能基于女主的摔门动作反应，通过三步连锁行为试图改变冷战现状。
+撒娇亲近： 杜绝神明化用户，在平等基础上引导一段逻辑可追溯的靠近，结尾留出两个以上后续入口。
+---
+0062：张力抓取小狗（原织女）
+思维链名称： 张力抓取小狗
+NSFW： 否
+对应预设： 小狗
+条目长短： 长
+COT特点词： 矛盾点抓取、撕扯连锁、语言外溢、自我调节
+核心区别与特色： 专注于矛盾的激化与情绪的调节，通过对白中的语言外溢来承载波动，而非通过极端的肢体渲染。
+建议应用场景： 适合处理高强度冲突、心机博弈、或者感情出现裂痕需要通过对白进行深度撕扯的片段。
+核心区别：撕扯分析（张力加剧）
+语言外溢对白核心
+情绪基调归纳
+场景展示：
+冲突离开： 抓取离开前的潜在摩擦点，通过长对白进行心理撕扯，在女主准备离场前制造一个新的张力落点。
+撒娇亲近： 引导角色在亲近时出现“语言外溢”，通过不断补充的解释或碎念，展现其在情感波动下的真实调节。
+---
+0063：小狗的笨蛋朋友
+思维链名称： 小狗的笨蛋朋友
+NSFW： 否
+对应预设： 小狗
+条目长短： 长
+COT特点词： 三人共创讨论、三人对白思维链、角色情绪分工、剧情推演大纲
+核心区别与特色： 极具创意的思维过程，通过Puppy God、阿绿、熊本熊三个性格迥异的虚拟角色进行对话式讨论。
+建议应用场景： 适合需要多视角打磨剧本、追求灵感碰撞，且希望在思维链中看到角色化讨论过程的趣味创作。
+核心区别：全程三人对话呈现
+每个人负责不同逻辑模块
+讨论式资料调用
+场景展示：
+冲突离开： 三人会争论女主离开的合理性，由熊本熊提醒逻辑衔接，阿绿丰富情绪细节，最终由Puppy God定稿。
+撒娇亲近： 三人会讨论亲近的分寸，思考如何温柔而不冒犯，讨论如何在对白中融入 50% 以上的占比。
+---
+0064：细节扎根（建筑）
+思维链名称： 细节扎根
+NSFW： 否
+对应预设： 小狗
+条目长短： 长
+COT特点词： 墙脚细节钉住、筑阶三步推进、女性向评分、开放前路
+核心区别与特色： 以建筑逻辑搭建叙事，强调场景细节的“钉住”功能，并对后续走向进行严格的女性向评分评选。
+建议应用场景： 适合需要扎实的现实感、逻辑严密的剧情升级，以及对女性向美学要求极高的细化场景。
+核心区别：钉住场景的三个细节
+三个走向女性向评分（七个维度）
+三阶连续推进
+场景展示：
+冲突离开： 选出最合适的走向并给予评分，通过描写女主拎包的重感等细节钉住场景，筑阶推进至新场景。
+撒娇亲近： 利用环境细节暗示心境，通过高占比对白筑起互动的“转折阶梯”，制造记忆中的高光瞬间。
+---
+0065：快速推进（新）
+思维链名称： 快速推进（新）
+NSFW： 否
+对应预设： 小狗
+条目长短： 长
+COT特点词： 三重事件连续递进、高光事件自判定、主线触及、跨时空衔接
+核心区别与特色： 极速拉动叙事进度，强制每轮必须经历三重递进事件，且其中一个必须被判定为弧光展现的高光点。
+建议应用场景： 适合用于主线爆发期、快节奏剧情或需要大步跨越时间空间、触及宏大背景的场合。
+核心区别：三重递进事件链条（1-2-3）
+事件间逻辑余波触发
+主线背景勾连
+高光事件自选
+场景展示：
+冲突离开： 女主离开（事件一）后遭遇突发事故（事件二），角色被迫共同应对主线危机（事件三），实现快节奏转折。
+撒娇亲近： 将亲近设计为高光点，穿插背景事件的进展，在三阶递进中完成从个人情感向大局发展的过渡。
+---
+0066：小狗的大纲2.0
+思维链名称： 小狗的大纲2.0
+NSFW： 否
+对应预设： 小狗
+条目长短： 长
+COT特点词： 时间跨度跳转、多事件连续推进、日常穿插、评分评选
+核心区别与特色： 侧重于叙事的大格局规划，强制包含大跨度的时间跳转，并确保叙事与主线背景同步前进。
+建议应用场景： 适合需要从当前的细腻互动快速切换到宏观叙事，或者需要模拟长时间关系演化的长线规划。
+核心区别：大跨度跳转（一夜/数日）
+两个以上连续推进事件
+日常细节穿插
+不离场收尾协议
+场景展示：
+冲突离开： 收束冲突后强制跳转到数日后的新地点，通过新事件引出后续的误会或冰释，确保角色始终在场。
+撒娇亲近： 在跳转后的清晨穿插工作细节，在大纲框架下确保情感推进细腻不夸张，并触及主线背景。
+---
+0067：好结局小狗
+思维链名称： 好结局小狗
+NSFW： 否
+对应预设： 小狗
+条目长短： 中
+COT特点词： 积极情绪起点、温暖伏笔、正面价值高光、Happy Ending 必定
+核心区别与特色： 童话化与美好化的叙事逻辑，强制所有转折和结局必须导向温暖、积极的结果。
+建议应用场景： 适合救赎向、温馨治愈、节日特别篇，或需要彻底排除负面情绪、打造纯净糖点的场景。
+核心区别：情绪起点正向化
+必定 Happy Ending
+禁止 NPC 冷漠
+温柔伏笔埋设
+场景展示：
+冲突离开： 引导转折至积极面，女主在玄关被角色的一句幽默挽留逗笑，制造一个温馨的高光记忆点。
+撒娇亲近： 生成浪漫的延伸走向，通过长句白描积极的心境，埋下一个关于未来礼物的温柔伏笔。
+---
+0068：明暗情绪抓取小狗（光影）
+思维链名称： 明暗情绪抓取小狗
+NSFW： 否
+对应预设： 小狗
+条目长短： 长
+COT特点词： 光影奠基、情绪阴影、细节对照、未尽之光收尾
+核心区别与特色： 利用舞台剧式的光影美学来界定氛围，通过光影与隐藏心事的对照来抓取深层情绪。
+建议应用场景： 适合描写纠结、暗涌、或具有高度审美要求的片段，通过外部环境的明暗变幻来隐喻心境。
+核心区别：光影氛围奠基
+情绪阴影对照
+三步自然延伸推进
+未尽之光收尾
+场景展示：
+冲突离开： 描写廊灯下的幽暗阴影笼罩角色半张脸，暗示未说出口的犹疑，通过环境变化作为转场信号。
+撒娇亲近： 确定一个高光焦点（如落入眼底的晨曦），让情绪的变化像光影交替般自然呈现，留下一束余韵。
+---
+0069：小狗咬咬你
+思维链名称： 小狗咬咬你
+NSFW： 否
+对应预设： 小狗
+条目长短： 长
+COT特点词： 风格标识句、认知边界约束、咬合机制、独立生活线
+核心区别与特色： 强调角色的独立性（不依附用户），通过独特的“咬合机制”让介入动作显得合理且充满关心。
+建议应用场景： 适合塑造事业型、冷静理智且有自我节奏的角色，强调在尊重与共情基础上的关系推进。
+核心区别：风格标识句要求
+角色独立生活线索展现
+六维度咬合机制（主宰/场景/情绪等）
+场景展示：
+冲突离开： 体现角色因自身目标受阻而产生的矛盾思考，利用环境咬入（如夜雨）合理插入关心的动作。
+撒娇亲近： 咬点来自人设动因而非控制，表现为察觉到用户的疲倦后，用温柔的共情力做出咬合回应。
+---
+0070：双线并进（同行）
+思维链名称： 双线并进
+NSFW： 否
+对应预设： 小狗
+条目长短： 中
+COT特点词： 主副线并行、长期/短期伏笔、共鸣点触动、健康形象塑造
+核心区别与特色： 强制开启主副线并行叙事，在推进关系的同时通过环境或物件埋设不同周期的伏笔。
+建议应用场景： 适合复杂剧情的开端，需要在日常互动中穿插主线线索，并持续塑造自尊自爱角色形象的时刻。
+核心区别：主副线线索呼应
+区分长短期伏笔
+拒绝用户神明化/矮化
+场景展示：
+冲突离开： 主线为离开的冲突，副线为背景中不断迫近的紧急通知，通过双线交错制造出不得不停留的共鸣点。
+撒娇亲近： 埋下一个长期伏笔（如一件未归还的衣服），在平等尊重基础上引导出一段基于互相吸引的亲密。
+---
+0071：小黄狗2.0
+思维链名称： 小黄狗2.0
+NSFW： 是
+对应预设： 小狗
+条目长短： 长
+COT特点词： 创新亲密动作、部位差异、拟声词选择、多重高潮逻辑、射精判定
+核心区别与特色： 极致的 NSFW 专业描写框架，设定了严格的射精条件（用户 ≥5次高潮），强调感官模拟的细腻度与创新性。
+建议应用场景： 适合深度 R18 互动，需要避免套路化亲密、追求极强感官冲击与生理细节嵌套的时刻。
+核心区别：创新动作部位差异
+根据节奏选拟声词
+角色射精硬性门槛
+女性高潮真实反应规范
+场景展示：
+冲突离开： 若演变为事后的温存，引导角色进行创新的抚触，通过部位差异制造新鲜感，并留下悬置对白。
+撒娇亲近： 引导进入高强度前戏，设计五感联动与拟声词，严格执行多重高潮逻辑，避免一次性写完。
+---
+0072：小黄狗3.0
+思维链名称： 小黄狗3.0
+NSFW： 是
+对应预设： 小狗
+条目长短： 长
+COT特点词： 角色性欲预测、性爱阶段判断、避孕戴套、Dirtytalk 设计、女性高潮创新
+核心区别与特色： 2.0 的升级版，增加了更细致的性欲处理路径（如克制、去厕所解决等）以及极其严格的避孕措施（必须戴套）。
+建议应用场景： 适合高标准、尊重女性向审美的 NSFW 场景，强调性爱的平常化与生活节奏感，杜绝过度夸张。
+核心区别：性欲处理路径分流
+纳入前强制戴套
+五段不少于 100 字的 Dirtytalk
+性爱阶段自然承接
+场景展示：
+冲突离开： 表现角色在冲突中产生性欲后的挣扎与克制处理，而非粗暴的强行发生，体现自尊与底线。
+撒娇亲近： 确定性爱当前阶段，设计微距递进式细节嵌套，结合情感经历生成高质量 Dirtytalk，最后以开放动作收尾。
+`;
+
+/**
+ * =========================================================
+ * 文本解析器 (Text Parsers)
+ * =========================================================
+ */
+function parseStyleData(rawData) {
+    const entries = rawData.trim().split(/\n---\n?/);
+    const parsedData = [];
+
+    entries.forEach(entry => {
+        if (!entry.trim()) return;
+        const lines = entry.trim().split('\n');
+        
+        let item = {
+            id: '', title: '', nsfw: false, presets: [], directions: [],
+            reference: '', keywords: [], features: [], example: ''
+        };
+        let currentSection = '';
+
+        const firstLineMatch = lines[0].match(/^(\d{4})[：:](.*)/);
+        if (firstLineMatch) {
+            item.id = firstLineMatch[1].trim();
+            item.title = firstLineMatch[2].trim();
+        }
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+
+            if (line.startsWith('文风名称：') || line.startsWith('文风名称:')) {
+                item.title = line.replace(/文风名称[：:]\s*/, '').trim();
+                currentSection = '';
+            } else if (line.startsWith('NSFW：') || line.startsWith('NSFW:')) {
+                item.nsfw = line.includes('是');
+                currentSection = '';
+            } else if (line.startsWith('文风对应预设：') || line.startsWith('文风对应预设:')) {
+                item.presets = line.replace(/文风对应预设[：:]\s*/, '').split(/[、，,]+/).map(s => s.trim()).filter(Boolean);
+                currentSection = '';
+            } else if (line.startsWith('文风使用方向：') || line.startsWith('文风使用方向:')) {
+                item.directions = line.replace(/文风使用方向[：:]\s*/, '').split(/[、，,]+/).map(s => s.trim()).filter(Boolean);
+                currentSection = '';
+            } else if (line.startsWith('文风参考：') || line.startsWith('文风参考:')) {
+                item.reference = line.replace(/文风参考[：:]\s*/, '').trim();
+                currentSection = '';
+            } else if (line.startsWith('文风特点词：') || line.startsWith('文风特点词:')) {
+                item.keywords = line.replace(/文风特点词[：:]\s*/, '').split(/[、，,]+/).map(s => s.trim()).filter(Boolean);
+                currentSection = '';
+            } else if (line.startsWith('文风特点介绍：') || line.startsWith('文风特点介绍:')) {
+                currentSection = 'features';
+            } else if (line.startsWith('文风示例：') || line.startsWith('文风示例:')) {
+                currentSection = 'example';
+            } else {
+                if (currentSection === 'features') {
+                    item.features.push(line);
+                } else if (currentSection === 'example') {
+                    item.example += (item.example ? '\n' : '') + line;
+                }
+            }
+        }
+        if (item.id) parsedData.push(item);
+    });
+    return parsedData;
+}
+
+function parseCotData(rawData) {
+    const entries = rawData.trim().split(/\n---\n?/);
+    const parsedData = [];
+
+    entries.forEach(entry => {
+        if (!entry.trim()) return;
+        const lines = entry.trim().split('\n');
+        
+        let item = {
+            id: '', title: '', nsfw: false, presets: [], length: '', keywords: [], 
+            coreFeature: '', useCase: '', coreDiffs: [], sceneConflict: '', sceneIntimacy: ''
+        };
+        let currentSection = '';
+
+        const firstLineMatch = lines[0].match(/^(\d{4})[：:](.*)/);
+        if (firstLineMatch) {
+            item.id = firstLineMatch[1].trim();
+            item.title = firstLineMatch[2].trim();
+        }
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+
+            if (line.startsWith('思维链名称：') || line.startsWith('思维链名称:')) {
+                item.title = line.replace(/思维链名称[：:]\s*/, '').trim();
+                currentSection = '';
+            } else if (line.startsWith('NSFW：') || line.startsWith('NSFW:')) {
+                item.nsfw = line.includes('是');
+                currentSection = '';
+            } else if (line.startsWith('对应预设：') || line.startsWith('对应预设:')) {
+                item.presets = line.replace(/对应预设[：:]\s*/, '').split(/[、，,]+/).map(s => s.trim()).filter(Boolean);
+                currentSection = '';
+            } else if (line.startsWith('条目长短：') || line.startsWith('条目长短:')) {
+                item.length = line.replace(/条目长短[：:]\s*/, '').trim();
+                currentSection = '';
+            } else if (line.startsWith('COT特点词：') || line.startsWith('COT特点词:')) {
+                item.keywords = line.replace(/COT特点词[：:]\s*/, '').split(/[、，,]+/).map(s => s.trim()).filter(Boolean);
+                currentSection = '';
+            } else if (line.startsWith('核心区别与特色：') || line.startsWith('核心区别与特色:')) {
+                item.coreFeature = line.replace(/核心区别与特色[：:]\s*/, '').trim();
+                currentSection = '';
+            } else if (line.startsWith('建议应用场景：') || line.startsWith('建议应用场景:')) {
+                item.useCase = line.replace(/建议应用场景[：:]\s*/, '').trim();
+                currentSection = '';
+            } else if (line.startsWith('核心区别：') || line.startsWith('核心区别:')) {
+                currentSection = 'coreDiffs';
+                const content = line.replace(/核心区别[：:]\s*/, '').trim();
+                if (content) item.coreDiffs.push(content);
+            } else if (line.startsWith('场景展示：') || line.startsWith('场景展示:')) {
+                currentSection = '';
+            } else if (line.startsWith('冲突离开：') || line.startsWith('冲突离开:')) {
+                currentSection = 'sceneConflict';
+                item.sceneConflict = line.replace(/冲突离开[：:]\s*/, '').trim();
+            } else if (line.startsWith('撒娇亲近：') || line.startsWith('撒娇亲近:')) {
+                currentSection = 'sceneIntimacy';
+                item.sceneIntimacy = line.replace(/撒娇亲近[：:]\s*/, '').trim();
+            } else {
+                // Multi-line handler
+                if (currentSection === 'coreDiffs') {
+                    item.coreDiffs.push(line);
+                } else if (currentSection === 'sceneConflict') {
+                    item.sceneConflict += (item.sceneConflict ? '\n' : '') + line;
+                } else if (currentSection === 'sceneIntimacy') {
+                    item.sceneIntimacy += (item.sceneIntimacy ? '\n' : '') + line;
+                }
+            }
+        }
+        if (item.id) parsedData.push(item);
+    });
+    return parsedData;
+}
+
+// =========================================================
+// App State 初始化
+// =========================================================
+const styleData = parseStyleData(rawStyleData);
+const cotData = parseCotData(rawCotData);
+
+let activeTab = 'style'; // 'style' or 'cot'
+let currentDataStyle = [...styleData];
+let currentDataCot = [...cotData];
+
+const predefinedTagsStyle = ["留光", "行间", "小狗", "冬日小狗", "众生相", "NSFW"];
+const predefinedTagsCot = ["留光", "行间", "小狗", "冬日小狗"]; // 无 NSFW，无 众生相
+
+let activeFilters = {
+    searchType: 'title',
+    searchText: '',
+    tags: []
+};
+
+// DOM Elements
+const els = {
+    navTabs: document.querySelectorAll('.nav-tab'),
+    navIndicator: document.getElementById('nav-indicator'),
+    filterBar: document.getElementById('filter-bar'),
+    btnToggleFilter: document.getElementById('btn-toggle-filter'),
+    viewStyle: document.getElementById('view-style'),
+    viewCot: document.getElementById('view-cot'),
+    cardsContainerStyle: document.getElementById('cards-container-style'),
+    cardsContainerCot: document.getElementById('cards-container-cot'),
+    noResult: document.getElementById('no-result'),
+    searchType: document.getElementById('search-type'),
+    searchInput: document.getElementById('search-input'),
+    filterTagsBox: document.getElementById('filter-tags'),
+    sidebar: document.getElementById('sidebar'),
+    sidebarOverlay: document.getElementById('sidebar-overlay'),
+    btnToggleSidebar: document.getElementById('btn-toggle-sidebar'),
+    btnCloseSidebar: document.getElementById('btn-close-sidebar'),
+    tocList: document.getElementById('toc-list'),
+    tocHeaderTitle: document.getElementById('toc-header-title')
+};
+
+// SVG Icons
+const svgQuill = `<svg class="icon-quill" viewBox="0 0 24 24"><path d="M18.944 2.056a4.872 4.872 0 0 0-6.89 0l-9.15 9.15a1 1 0 0 0-.253.468l-1.6 6.4a1 1 0 0 0 1.204 1.204l6.4-1.6a1 1 0 0 0 .468-.253l9.15-9.15a4.872 4.872 0 0 0 0-6.89zm-5.476 1.414a2.872 2.872 0 0 1 4.062 0 2.872 2.872 0 0 1 0 4.062l-1.048 1.048-4.062-4.062 1.048-1.048zM3.456 16.48l3.064 3.064-4.225 1.056 1.161-4.12zm4.478 2.086l-3.064-3.064 7.636-7.636 3.064 3.064-7.636 7.636z"/></svg>`;
+const svgBrain = `<svg class="icon-brain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"></path><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"></path></svg>`;
+
+/**
+ * Utility: Format text to stylize quotes if any exist
+ */
+function stylizeQuotes(text) {
+    const regex = /([“「"])(.*?)([”」"])/g;
+    return text.replace(regex, '$1<span class="quote-style">$2</span>$3');
+}
+
+/**
+ * Render Filter Tags Dynamically Based on Active Tab
+ */
+function renderFilterTags() {
+    els.filterTagsBox.innerHTML = '';
+    const tagsToRender = activeTab === 'style' ? predefinedTagsStyle : predefinedTagsCot;
+    
+    tagsToRender.forEach(tag => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-tag';
+        if (activeFilters.tags.includes(tag)) {
+            btn.classList.add('active');
+        }
+        btn.textContent = tag;
+        btn.dataset.tag = tag;
+        btn.addEventListener('click', () => toggleTagFilter(tag, btn));
+        els.filterTagsBox.appendChild(btn);
+    });
+}
+
+function toggleTagFilter(tag, btnElement) {
+    if (activeTab === 'style') {
+        // 多选逻辑 (Multi-select)
+        const index = activeFilters.tags.indexOf(tag);
+        if (index > -1) {
+            activeFilters.tags.splice(index, 1);
+            btnElement.classList.remove('active');
+        } else {
+            activeFilters.tags.push(tag);
+            btnElement.classList.add('active');
+        }
+    } else {
+        // 单选逻辑 (Single-select for CoT)
+        const isActive = activeFilters.tags.includes(tag);
+        activeFilters.tags = []; // 清除其他选择
+        
+        // 移除所有按钮的 active 状态
+        Array.from(els.filterTagsBox.children).forEach(child => child.classList.remove('active'));
+        
+        // 如果刚才没有被选中，则选中它
+        if (!isActive) {
+            activeFilters.tags.push(tag);
+            btnElement.classList.add('active');
+        }
+    }
+    
+    applyFilters();
+}
+
+/**
+ * Apply Filters and Update Active View
+ */
+function applyFilters() {
+    const text = activeFilters.searchText.toLowerCase().trim();
+    const type = activeFilters.searchType;
+    const activeTags = activeFilters.tags;
+
+    // Filter Function Generator
+    const filterFn = (item) => {
+        let textMatch = true;
+        if (text) {
+            if (type === 'title') {
+                textMatch = item.title.toLowerCase().includes(text);
+            } else if (type === 'feature') {
+                // Determine text corpus based on data type (Style or CoT)
+                let corpus = "";
+                if (item.features) {
+                    corpus = item.features.join(' ') + ' ' + item.keywords.join(' ');
+                } else {
+                    corpus = item.coreFeature + ' ' + item.useCase + ' ' + item.keywords.join(' ');
+                }
+                textMatch = corpus.toLowerCase().includes(text);
+            }
+        }
+
+        let tagsMatch = true;
+        if (activeTags.length > 0) {
+            tagsMatch = activeTags.every(t => {
+                if (t === 'NSFW') return item.nsfw === true;
+                return item.presets.includes(t);
+            });
+        }
+        return textMatch && tagsMatch;
+    };
+
+    if (activeTab === 'style') {
+        currentDataStyle = styleData.filter(filterFn);
+        renderStyleCards();
+    } else {
+        currentDataCot = cotData.filter(filterFn);
+        renderCotCards();
+    }
+    renderTOC();
+}
+
+/**
+ * Render View: Style Cards
+ */
+function renderStyleCards() {
+    els.cardsContainerStyle.innerHTML = '';
+    
+    if (currentDataStyle.length === 0) {
+        els.cardsContainerStyle.style.display = 'none';
+        els.noResult.style.display = 'block';
+        return;
+    }
+    
+    els.cardsContainerStyle.style.display = 'flex';
+    els.noResult.style.display = 'none';
+
+    currentDataStyle.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.id = `style-${item.id}`;
+        card.style.animationDelay = `${index * 0.05}s`;
+
+        const presetsHtml = item.presets.map(t => `<span class="tag preset">${t}</span>`).join('');
+        const dirsHtml = item.directions.map(t => `<span class="tag direction">${t}</span>`).join('');
+        const keysHtml = item.keywords.map(t => `<span class="tag keyword">${t}</span>`).join('');
+        const featuresHtml = item.features.map(f => `<li>${f}</li>`).join('');
+        const exampleHtml = item.example.split('\n').filter(l => l.trim() !== '').map(l => `<p>${stylizeQuotes(l)}</p>`).join('');
+        const nsfwHtml = item.nsfw ? `<span class="icon-heart">♥</span>` : '';
+
+        card.innerHTML = `
+            <div class="card-header">
+                <div class="card-id">${item.id}</div>
+                <div class="card-title-wrapper">
+                    <h2 class="card-title">${svgQuill} ${item.title} ${nsfwHtml}</h2>
+                </div>
+            </div>
+            <div class="card-tags">
+                <div class="tag-group"><span class="tag-label">预设</span> ${presetsHtml}</div>
+                <div class="tag-group"><span class="tag-label">方向</span> ${dirsHtml}</div>
+                <div class="tag-group"><span class="tag-label">特点</span> ${keysHtml}</div>
+            </div>
+            <div class="card-section">
+                <div class="section-title">参考</div>
+                <div class="reference-text">${item.reference}</div>
+            </div>
+            <div class="card-section">
+                <div class="section-title">特点介绍</div>
+                <ul class="features-list">${featuresHtml}</ul>
+            </div>
+            <div class="card-section" style="margin-bottom:0;">
+                <div class="section-title">示例</div>
+                <div class="example-block">${exampleHtml}</div>
+            </div>
+        `;
+        els.cardsContainerStyle.appendChild(card);
+    });
+}
+
+/**
+ * Render View: CoT Cards
+ */
+function renderCotCards() {
+    els.cardsContainerCot.innerHTML = '';
+    
+    if (currentDataCot.length === 0) {
+        els.cardsContainerCot.style.display = 'none';
+        els.noResult.style.display = 'block';
+        return;
+    }
+    
+    els.cardsContainerCot.style.display = 'flex';
+    els.noResult.style.display = 'none';
+
+    currentDataCot.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.id = `cot-${item.id}`;
+        card.style.animationDelay = `${index * 0.05}s`;
+
+        const presetsHtml = item.presets.map(t => `<span class="tag preset">${t}</span>`).join('');
+        
+        let lengthClass = 'length-mid';
+        if (item.length === '短') lengthClass = 'length-short';
+        if (item.length.includes('长')) lengthClass = 'length-long';
+        const lengthHtml = `<span class="tag ${lengthClass}">${item.length}</span>`;
+        
+        const keysHtml = item.keywords.map(t => `<span class="tag keyword">${t}</span>`).join('');
+        const coreDiffsHtml = item.coreDiffs.map(step => `<li>${step}</li>`).join('');
+        
+        const sceneConflictHtml = item.sceneConflict.split('\n').filter(l => l.trim() !== '').map(l => `<p>${l}</p>`).join('');
+        const sceneIntimacyHtml = item.sceneIntimacy.split('\n').filter(l => l.trim() !== '').map(l => `<p>${l}</p>`).join('');
+        const nsfwHtml = item.nsfw ? `<span class="icon-heart">♥</span>` : '';
+
+        card.innerHTML = `
+            <div class="card-header">
+                <div class="card-id">${item.id}</div>
+                <div class="card-title-wrapper">
+                    <h2 class="card-title">${svgBrain} ${item.title} ${nsfwHtml}</h2>
+                </div>
+            </div>
+            <div class="card-tags">
+                <div class="tag-group"><span class="tag-label">预设</span> ${presetsHtml}</div>
+                <div class="tag-group"><span class="tag-label">长度</span> ${lengthHtml}</div>
+                <div class="tag-group"><span class="tag-label">特点</span> ${keysHtml}</div>
+            </div>
+            
+            <div class="cot-highlight">
+                <div class="highlight-item"><span class="highlight-title">核心区别与特色：</span>${item.coreFeature}</div>
+                <div class="highlight-item"><span class="highlight-title">建议应用场景：</span>${item.useCase}</div>
+            </div>
+
+            <div class="card-section">
+                <div class="section-title">核心区别 / 步骤</div>
+                <ol class="vintage-list">${coreDiffsHtml}</ol>
+            </div>
+
+            <div class="card-section" style="margin-bottom:0;">
+                <div class="section-title">场景展示</div>
+                <div class="scene-container">
+                    <div class="scene-box">
+                        <div class="scene-box-title">冲突离开</div>
+                        ${sceneConflictHtml}
+                    </div>
+                    <div class="scene-box">
+                        <div class="scene-box-title">撒娇亲近</div>
+                        ${sceneIntimacyHtml}
+                    </div>
+                </div>
+            </div>
+        `;
+        els.cardsContainerCot.appendChild(card);
+    });
+}
+
+/**
+ * Render Sidebar TOC based on Active Tab
+ */
+function renderTOC() {
+    els.tocList.innerHTML = '';
+    const targetData = activeTab === 'style' ? currentDataStyle : currentDataCot;
+    const prefix = activeTab === 'style' ? 'style-' : 'cot-';
+    
+    els.tocHeaderTitle.textContent = activeTab === 'style' ? '🔖 文风目录' : '🔖 思维链目录';
+
+    targetData.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'toc-item';
+        li.innerHTML = `<span class="toc-id">${item.id}</span> <span>${item.title}</span>`;
+        li.addEventListener('click', () => {
+            const cardEl = document.getElementById(`${prefix}${item.id}`);
+            if (cardEl) {
+                const y = cardEl.getBoundingClientRect().top + window.pageYOffset - 150;
+                window.scrollTo({top: y, behavior: 'smooth'});
+            }
+            closeSidebar();
+        });
+        els.tocList.appendChild(li);
+    });
+}
+
+/**
+ * Sidebar Toggle Logic
+ */
+function openSidebar() {
+    els.sidebar.classList.add('open');
+    els.sidebarOverlay.classList.add('show');
+    document.body.style.overflow = 'hidden'; 
+}
+
+function closeSidebar() {
+    els.sidebar.classList.remove('open');
+    els.sidebarOverlay.classList.remove('show');
+    document.body.style.overflow = '';
+}
+
+/**
+ * Navigation Tabs Logic
+ */
+function switchTab(e) {
+    if (!e.target.classList.contains('nav-tab')) return;
+    
+    const targetTab = e.target.dataset.target;
+    if (activeTab === targetTab) return; // Prevent redundant clicks
+
+    // Update Active Class
+    els.navTabs.forEach(tab => tab.classList.remove('active'));
+    e.target.classList.add('active');
+
+    // Move Indicator
+    const targetIndex = Array.from(els.navTabs).indexOf(e.target);
+    els.navIndicator.style.transform = `translateX(${targetIndex * 100}%)`;
+
+    activeTab = targetTab;
+
+    // Clear filters and re-render tags for the newly active tab
+    activeFilters.tags = [];
+    renderFilterTags();
+
+    // Toggle Views
+    if (activeTab === 'style') {
+        els.viewStyle.classList.add('active');
+        els.viewCot.classList.remove('active');
+    } else {
+        els.viewStyle.classList.remove('active');
+        els.viewCot.classList.add('active');
+    }
+
+    // Re-apply filters for the newly active view to sync states
+    applyFilters();
+}
+
+/**
+ * Event Listeners Initialization
+ */
+function setupEventListeners() {
+    els.navTabs.forEach(tab => tab.addEventListener('click', switchTab));
+
+    els.btnToggleFilter.addEventListener('click', () => {
+        document.body.classList.toggle('filter-collapsed');
+    });
+
+    els.searchInput.addEventListener('input', (e) => {
+        activeFilters.searchText = e.target.value;
+        applyFilters();
+    });
+
+    els.searchType.addEventListener('change', (e) => {
+        activeFilters.searchType = e.target.value;
+        applyFilters();
+    });
+
+    els.btnToggleSidebar.addEventListener('click', openSidebar);
+    els.btnCloseSidebar.addEventListener('click', closeSidebar);
+    els.sidebarOverlay.addEventListener('click', closeSidebar);
+}
+
+/**
+ * Bootstrapping
+ */
+function init() {
+    renderFilterTags();
+    applyFilters(); // will call renderStyleCards/renderCotCards & renderTOC initially
+    setupEventListeners();
+}
+
+// Start app
+document.addEventListener('DOMContentLoaded', init);
+
+</script>
+</body>
+</html>
